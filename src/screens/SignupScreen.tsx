@@ -341,14 +341,14 @@ const SignupScreen = ({ navigation }: any) => {
                 <Text style={{ marginLeft: 8 }}>Remember me</Text>
               </View>
 
-              <Text style={styles.or}>or</Text>
+              {/* <Text style={styles.or}>or</Text> */}
 
-              <TouchableOpacity style={styles.googleBtn}>
+              {/* <TouchableOpacity style={styles.googleBtn}>
                 <FontAwesome name="google" size={18} />
                 <Text style={{ marginLeft: 8 }}>
                   Continue with Google
                 </Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
 
               <GradientButton text="Sign up" onPress={validateStep4} />
             </>

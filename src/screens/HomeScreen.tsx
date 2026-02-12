@@ -23,17 +23,19 @@ const HomeScreen = () => {
   }, []);
 
   const loadUserData = async () => {
-    const currentUser = await AsyncStorage.getItem("currentUser");
-    const storedUsers = await AsyncStorage.getItem("users");
+    const currentUserString = await AsyncStorage.getItem("currentUser");
 
-    const users = storedUsers ? JSON.parse(storedUsers) : [];
+    if (!currentUserString) {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Login" }],
+      });
+      return;
+    }
 
-    const loggedUser = users.find(
-      (user: any) =>
-        user.email === currentUser || user.username === currentUser
-    );
+    const user = JSON.parse(currentUserString);
 
-    setUserData(loggedUser);
+    setUserData(user);
     setLoading(false);
   };
 
@@ -58,7 +60,6 @@ const HomeScreen = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
 
-        {/* BACK BUTTON */}
         <TouchableOpacity
           style={styles.backBtn}
           onPress={() => navigation.navigate("Login")}
@@ -111,63 +112,24 @@ const InfoRow = ({ label, value }: any) => (
 export default HomeScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#fff",
-  },
-
-  loaderContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  backBtn: {
-    marginBottom: 20,
-  },
-
-  title: {
-    fontSize: 22,
-    fontWeight: "700",
-    marginBottom: 8,
-  },
-
-  subtitle: {
-    color: "#777",
-    marginBottom: 30,
-  },
-
-  infoContainer: {
-    marginBottom: 20,
-  },
-
-  label: {
-    marginBottom: 6,
-    color: "#333",
-  },
-
+  container: { flex: 1, padding: 20, backgroundColor: "#fff" },
+  loaderContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  backBtn: { marginBottom: 20 },
+  title: { fontSize: 22, fontWeight: "700", marginBottom: 8 },
+  subtitle: { color: "#777", marginBottom: 30 },
+  infoContainer: { marginBottom: 20 },
+  label: { marginBottom: 6, color: "#333" },
   inputRow: {
     borderBottomWidth: 1,
     borderColor: "#6C4EFF",
     paddingVertical: 8,
   },
-
-  value: {
-    fontSize: 15,
-    fontWeight: "600",
-  },
-
+  value: { fontSize: 15, fontWeight: "600" },
   button: {
     marginTop: 40,
     paddingVertical: 18,
     borderRadius: 30,
     alignItems: "center",
   },
-
-  buttonText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 16,
-  },
+  buttonText: { color: "#fff", fontWeight: "700", fontSize: 16 },
 });

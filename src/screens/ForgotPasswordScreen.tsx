@@ -5,12 +5,12 @@ import {
   View,
   TextInput,
   TouchableOpacity,
-  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
+import Toast from "react-native-toast-message";
 
 const ForgotPasswordScreen = () => {
   const navigation: any = useNavigation();
@@ -18,7 +18,11 @@ const ForgotPasswordScreen = () => {
 
   const handleContinue = async () => {
     if (!email.trim()) {
-      Alert.alert("Error", "Email is required");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Email is required",
+      });
       return;
     }
 
@@ -30,18 +34,31 @@ const ForgotPasswordScreen = () => {
     );
 
     if (!matchedUser) {
-      Alert.alert("Error", "Email not found");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Email not found",
+      });
       return;
     }
 
+    // Generate 4 digit OTP
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
     await AsyncStorage.setItem("resetOTP", otp);
     await AsyncStorage.setItem("resetEmail", email);
 
-    Alert.alert("OTP Sent", `Your OTP is ${otp}`);
+    // ✅ Show OTP in Toast
+    Toast.show({
+      type: "success",
+      text1: "OTP Sent",
+      text2: `Your OTP is ${otp}`,
+      visibilityTime: 4000,
+    });
 
-    navigation.navigate("Otp");
+    setTimeout(() => {
+      navigation.navigate("Otp");
+    }, 5000);
   };
 
   return (
@@ -56,6 +73,8 @@ const ForgotPasswordScreen = () => {
         style={styles.input}
         value={email}
         onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
       />
 
       <TouchableOpacity onPress={handleContinue}>
@@ -73,10 +92,23 @@ const ForgotPasswordScreen = () => {
 export default ForgotPasswordScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#fff" },
-  title: { fontSize: 22, fontWeight: "600", marginBottom: 10 },
-  subtitle: { color: "#777", marginBottom: 30 },
-  label: { marginBottom: 5 },
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: "#fff",
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: "600",
+    marginBottom: 10,
+  },
+  subtitle: {
+    color: "#777",
+    marginBottom: 30,
+  },
+  label: {
+    marginBottom: 5,
+  },
   input: {
     borderBottomWidth: 1,
     borderColor: "#6C4EFF",
@@ -88,5 +120,8 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     alignItems: "center",
   },
-  buttonText: { color: "#fff", fontWeight: "600" },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
 });

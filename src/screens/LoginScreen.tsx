@@ -47,14 +47,18 @@ const LoginScreen = () => {
     );
 
     if (matchedUser) {
-      if (remember) {
-        await AsyncStorage.setItem("currentUser", email);
-      }
+
+      // 🔥 FIX: Save FULL user object
+      await AsyncStorage.setItem(
+        "currentUser",
+        JSON.stringify(matchedUser)
+      );
 
       navigation.reset({
         index: 0,
         routes: [{ name: "Home" }],
       });
+
     } else {
       Alert.alert("Error", "Invalid email or password");
     }
@@ -67,7 +71,7 @@ const LoginScreen = () => {
       <TouchableOpacity
         style={styles.backBtn}
         onPress={() => {
-          navigation.navigate(("Onboarding"))
+          navigation.navigate("Onboarding");
         }}
       >
         <Ionicons name="arrow-back" size={24} color="#000" />
@@ -75,7 +79,6 @@ const LoginScreen = () => {
 
       <Text style={styles.hello}>Hello there 👋</Text>
 
-      {/* EMAIL */}
       <Text style={styles.label}>Email</Text>
       <View style={styles.inputRow}>
         <TextInput
@@ -87,7 +90,6 @@ const LoginScreen = () => {
         />
       </View>
 
-      {/* PASSWORD */}
       <Text style={styles.label}>Password</Text>
       <View style={styles.inputRow}>
         <TextInput
@@ -105,18 +107,15 @@ const LoginScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* REMEMBER */}
       <View style={styles.rememberRow}>
         <Switch value={remember} onValueChange={setRemember} />
         <Text style={{ marginLeft: 8 }}>Remember me</Text>
       </View>
 
-      {/* FORGOT PASSWORD */}
       <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")}>
         <Text style={styles.forgot}>Forgot Password?</Text>
       </TouchableOpacity>
 
-      {/* SIGN IN BUTTON */}
       <TouchableOpacity onPress={handleLogin}>
         <LinearGradient
           colors={["#7B5CFF", "#5E3DF0"]}
@@ -132,23 +131,10 @@ const LoginScreen = () => {
 export default LoginScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#fff",
-  },
-  backBtn: {
-    marginBottom: 20,
-  },
-  hello: {
-    fontSize: 22,
-    fontWeight: "600",
-    marginBottom: 40,
-  },
-  label: {
-    marginTop: 15,
-    color: "#333",
-  },
+  container: { flex: 1, padding: 20, backgroundColor: "#fff" },
+  backBtn: { marginBottom: 20 },
+  hello: { fontSize: 22, fontWeight: "600", marginBottom: 40 },
+  label: { marginTop: 15, color: "#333" },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -156,28 +142,14 @@ const styles = StyleSheet.create({
     borderColor: "#6C4EFF",
     paddingVertical: 6,
   },
-  input: {
-    flex: 1,
-    fontSize: 14,
-  },
-  rememberRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 20,
-  },
-  forgot: {
-    textAlign: "center",
-    marginTop: 20,
-    color: "#6C4EFF",
-  },
+  input: { flex: 1, fontSize: 14 },
+  rememberRow: { flexDirection: "row", alignItems: "center", marginTop: 20 },
+  forgot: { textAlign: "center", marginTop: 20, color: "#6C4EFF" },
   button: {
     marginTop: 40,
     paddingVertical: 18,
     borderRadius: 25,
     alignItems: "center",
   },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "700",
-  },
+  buttonText: { color: "#fff", fontWeight: "700" },
 });
