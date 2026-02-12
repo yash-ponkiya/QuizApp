@@ -1,0 +1,14 @@
+{
+  "accountTypes": [
+    { "id": "1", "title": "Personal", "color": "#4A90E2" },
+    { "id": "2", "title": "Teacher", "color": "#F5A623" },
+    { "id": "3", "title": "Student", "color": "#50E3C2" },
+    { "id": "4", "title": "Professional", "color": "#FF6B6B" }
+  ],
+  "workTypes": [
+    { "id": "1", "title": "School", "color": "#4A90E2" },
+    { "id": "2", "title": "Higher Education", "color": "#F5A623" },
+    { "id": "3", "title": "Teams", "color": "#50E3C2" },
+    { "id": "4", "title": "Business", "color": "#FF6B6B" }
+  ]
+}

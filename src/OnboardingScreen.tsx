@@ -10,7 +10,8 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { styles } from "./styles/styles";
-const { width, height } = Dimensions.get("window");
+
+const { width } = Dimensions.get("window");
 
 const DATA = [
   {
@@ -33,19 +34,27 @@ const DATA = [
   },
 ];
 
-export default function OnboardingScreen() {
+export default function OnboardingScreen({ navigation }: any) {
   const flatListRef = useRef<any>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  // Smooth Auto Slide (No Blink)
   useEffect(() => {
     const interval = setInterval(() => {
       let nextIndex = currentIndex + 1;
-      if (nextIndex >= DATA.length) nextIndex = 0;
 
-      flatListRef.current?.scrollToIndex({
-        index: nextIndex,
-        animated: true,
-      });
+      if (nextIndex >= DATA.length) {
+        flatListRef.current?.scrollToOffset({
+          offset: 0,
+          animated: false,
+        });
+        nextIndex = 0;
+      } else {
+        flatListRef.current?.scrollToIndex({
+          index: nextIndex,
+          animated: true,
+        });
+      }
 
       setCurrentIndex(nextIndex);
     }, 3000);
@@ -80,6 +89,7 @@ export default function OnboardingScreen() {
         }}
       />
 
+      {/* DOTS */}
       <View style={styles.dotWrapper}>
         {DATA.map((_, i) => (
           <View
@@ -92,8 +102,13 @@ export default function OnboardingScreen() {
         ))}
       </View>
 
+      {/* BUTTONS */}
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.primaryButton}>
+        {/* GET STARTED → SIGNUP */}
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={() => navigation.navigate("Signup")}
+        >
           <LinearGradient
             colors={["#7B5CFF", "#5E3DF0"]}
             start={{ x: 0, y: 0 }}
@@ -104,7 +119,11 @@ export default function OnboardingScreen() {
           </LinearGradient>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.secondaryButton}>
+        {/* LOGIN BUTTON */}
+        <TouchableOpacity
+          style={styles.secondaryButton}
+          onPress={() => navigation.navigate("Login")}
+        >
           <Text style={styles.secondaryText}>
             I ALREADY HAVE AN ACCOUNT
           </Text>
@@ -113,4 +132,3 @@ export default function OnboardingScreen() {
     </View>
   );
 }
-
