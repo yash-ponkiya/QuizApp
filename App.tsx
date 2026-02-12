@@ -32,7 +32,6 @@ export default function App() {
     }
   };
 
-  // 🔥 Show loading while checking
   if (!initialRoute) {
     return (
       <View
