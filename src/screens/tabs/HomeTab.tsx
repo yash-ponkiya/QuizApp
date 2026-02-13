@@ -39,7 +39,6 @@ export default function HomeTab() {
     setAuthors(list);
   };
 
-  // 🔄 AUTO REFRESH WHEN SCREEN FOCUSED
   useFocusEffect(
     useCallback(() => {
       loadAuthors();
@@ -93,7 +92,13 @@ export default function HomeTab() {
         <>
           <View style={styles.authorsHeader}>
             <Text style={styles.sectionTitle}>Top Authors</Text>
-            <Text style={styles.viewAll}>View all</Text>
+
+            {/* ✅ CLICKABLE VIEW ALL */}
+            <TouchableOpacity
+              onPress={() => navigation.navigate("FollowedAuthors")}
+            >
+              <Text style={styles.viewAll}>View all</Text>
+            </TouchableOpacity>
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -126,22 +131,23 @@ const styles = StyleSheet.create({
 
   headerIcons: { flexDirection: "row", gap: 16 },
 
-  card: { borderRadius: 18, padding: 20, height: 150, overflow: "hidden" },
+  card: { borderRadius: 18, padding: 20, height: 180, overflow: "hidden" },
 
-  cardTitle: { color: "#fff", fontSize: 16, fontWeight: "600", marginBottom: 12 },
+  cardTitle: { color: "#fff", fontSize: 22, fontWeight: "600", marginBottom: 10, marginTop: 8 },
 
-  button: { backgroundColor: "#fff", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, alignSelf: "flex-start" },
+  button: { backgroundColor: "#fff", paddingHorizontal: 16, marginTop: 17, paddingVertical: 8, borderRadius: 20, alignSelf: "flex-start" },
 
-  buttonText: { color: "#6C4EFF", fontWeight: "600" },
+  buttonText: { color: "#6C4EFF", fontWeight: "600", fontSize: 16 },
 
   avatars: { position: "absolute", right: 0, top: 0, width: 150, height: 150 },
 
   avatar: {
+    marginTop: 20,
     position: "absolute",
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    borderWidth: 2,
+    width: 35,
+    height: 35,
+    borderRadius: 35,
+    borderWidth: 1,
     borderColor: "#fff",
   },
 

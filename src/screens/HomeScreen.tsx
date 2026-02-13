@@ -31,7 +31,7 @@ export default function HomeScreen() {
         },
       })}
     >
-      <Tab.Screen name="Hometab" component={HomeTab} />
+      <Tab.Screen name="Hometab" component={HomeTab} options={{title:"Home"}}/>
       <Tab.Screen name="Library" component={LibraryScreen} />
       <Tab.Screen name="Join" component={JoinScreen} />
       <Tab.Screen name="Create" component={CreateScreen} />

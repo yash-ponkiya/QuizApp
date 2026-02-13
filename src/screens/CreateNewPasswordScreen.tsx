@@ -55,7 +55,6 @@ const CreateNewPasswordScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
 
-      {/* BACK BUTTON */}
       <TouchableOpacity
         style={styles.backBtn}
         onPress={() => navigation.navigate("Onboarding")}
