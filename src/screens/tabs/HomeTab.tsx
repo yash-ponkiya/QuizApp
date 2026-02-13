@@ -16,32 +16,41 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function HomeTab() {
   const navigation: any = useNavigation();
   const [authors, setAuthors] = useState<any[]>([]);
+  const [collections, setCollections] = useState<any[]>([]);
 
   const getAvatar = (seed: string) =>
     `https://api.dicebear.com/7.x/avataaars/png?seed=${seed}`;
 
-  const loadAuthors = async () => {
+  const loadData = async () => {
     const usersData = await AsyncStorage.getItem("users");
     const followedData = await AsyncStorage.getItem("followedUsers");
+    const collectionsData = await AsyncStorage.getItem("collections");
 
-    if (!usersData || !followedData) {
-      setAuthors([]);
-      return;
+    // AUTHORS
+    if (usersData && followedData) {
+      const users = JSON.parse(usersData);
+      const followed = JSON.parse(followedData);
+
+      const list = users.filter((u: any) =>
+        followed.includes(u.email)
+      );
+
+      setAuthors(list);
     }
 
-    const users = JSON.parse(usersData);
-    const followed = JSON.parse(followedData);
-
-    const list = users.filter((u: any) =>
-      followed.includes(u.email)
-    );
-
-    setAuthors(list);
+    // COLLECTIONS (PUBLIC)
+    if (collectionsData) {
+      const all = JSON.parse(collectionsData);
+      const publicCollections = all.filter(
+        (c: any) => c.visibleTo === "Public"
+      );
+      setCollections(publicCollections);
+    }
   };
 
   useFocusEffect(
     useCallback(() => {
-      loadAuthors();
+      loadData();
     }, [])
   );
 
@@ -93,7 +102,6 @@ export default function HomeTab() {
           <View style={styles.authorsHeader}>
             <Text style={styles.sectionTitle}>Top Authors</Text>
 
-            {/* ✅ CLICKABLE VIEW ALL */}
             <TouchableOpacity
               onPress={() => navigation.navigate("FollowedAuthors")}
             >
@@ -111,6 +119,42 @@ export default function HomeTab() {
                 <Text style={styles.authorName} numberOfLines={1}>
                   {u.fullName}
                 </Text>
+              </View>
+            ))}
+          </ScrollView>
+        </>
+      )}
+
+      {/* TOP COLLECTIONS */}
+      {collections.length > 0 && (
+        <>
+          <View style={styles.collectionsHeader}>
+            <Text style={styles.sectionTitle}>Top Collections</Text>
+
+            <TouchableOpacity
+              onPress={() => navigation.navigate("Collections")}
+            >
+              <Text style={styles.viewAll}>View all</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {collections.map((c, i) => (
+              <View key={i} style={styles.collectionCard}>
+                <Image
+                  source={{
+                    uri:
+                      c.image ||
+                      "https://images.unsplash.com/photo-1522202176988-66273c2fd55f",
+                  }}
+                  style={styles.collectionImage}
+                />
+
+                <View style={styles.collectionOverlay}>
+                  <Text style={styles.collectionTitle}>
+                    {c.title}
+                  </Text>
+                </View>
               </View>
             ))}
           </ScrollView>
@@ -159,6 +203,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 
+  collectionsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: -250, // ✅ smaller gap
+    marginBottom: 10,
+  },
+
   sectionTitle: { fontSize: 18, fontWeight: "700" },
 
   viewAll: { color: "#6C4EFF", fontWeight: "600" },
@@ -168,4 +220,31 @@ const styles = StyleSheet.create({
   authorAvatar: { width: 56, height: 56, borderRadius: 28, marginBottom: 6 },
 
   authorName: { fontSize: 12, textAlign: "center" },
+
+  collectionCard: {
+    width: 160,
+    height: 90,
+    borderRadius: 14,
+    overflow: "hidden",
+    marginRight: 14,
+  },
+
+  collectionImage: {
+    width: "100%",
+    height: "100%",
+  },
+
+  collectionOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 6,
+    backgroundColor: "rgba(0,0,0,0.35)",
+  },
+
+  collectionTitle: {
+    color: "#fff",
+    fontWeight: "600",
+  },
 });
