@@ -26,12 +26,11 @@ const SignupScreen = ({ navigation }: any) => {
   const [remember, setRemember] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
 
-  /* ======== ADDED STATES ======== */
   const [errors, setErrors] = useState<any>({});
   const [showDate, setShowDate] = useState(false);
   const [showCountryList, setShowCountryList] = useState(false);
+
   const countries = ["India", "United States", "United Kingdom", "Canada", "Australia"];
-  /* ============================== */
 
   const [form, setForm] = useState({
     accountType: "",
@@ -46,25 +45,33 @@ const SignupScreen = ({ navigation }: any) => {
     password: "",
   });
 
+  /* ================= EMAIL CHECK ================= */
+
+  const checkEmailExists = async (email: string) => {
+    const existing = await AsyncStorage.getItem("users");
+    const users = existing ? JSON.parse(existing) : [];
+    return users.some(
+      (u: any) => u.email?.toLowerCase() === email.toLowerCase()
+    );
+  };
+
   /* ================= VALIDATION ================= */
 
-  const validateStep3 = () => {
+  const validateStep3 = async () => {
     let newErrors: any = {};
 
-    if (!form.fullName.trim())
-      newErrors.fullName = "Full Name is required";
+    if (!form.fullName.trim()) newErrors.fullName = "Full Name is required";
+    if (!form.dob.trim()) newErrors.dob = "Date of Birth is required";
+    if (!form.phone.match(/^[0-9]{10}$/)) newErrors.phone = "Phone must be 10 digits";
+    if (!form.country.trim()) newErrors.country = "Country is required";
+    if (!form.age.match(/^[0-9]+$/)) newErrors.age = "Enter valid age";
 
-    if (!form.dob.trim())
-      newErrors.dob = "Date of Birth is required";
-
-    if (!form.phone.match(/^[0-9]{10}$/))
-      newErrors.phone = "Phone must be 10 digits";
-
-    if (!form.country.trim())
-      newErrors.country = "Country is required";
-
-    if (!form.age.match(/^[0-9]+$/))
-      newErrors.age = "Enter valid age";
+    if (!form.email.match(/^\S+@\S+\.\S+$/)) {
+      newErrors.email = "Invalid email";
+    } else {
+      const exists = await checkEmailExists(form.email);
+      if (exists) newErrors.email = "Email already registered";
+    }
 
     setErrors(newErrors);
 
@@ -76,14 +83,8 @@ const SignupScreen = ({ navigation }: any) => {
   const validateStep4 = async () => {
     let newErrors: any = {};
 
-    if (!form.username.trim())
-      newErrors.username = "Username required";
-
-    if (!form.email.match(/^\S+@\S+\.\S+$/))
-      newErrors.email = "Invalid email";
-
-    if (form.password.length < 6)
-      newErrors.password = "Password must be 6+ characters";
+    if (!form.username.trim()) newErrors.username = "Username required";
+    if (form.password.length < 6) newErrors.password = "Password must be 6+ characters";
 
     setErrors(newErrors);
 
@@ -95,19 +96,16 @@ const SignupScreen = ({ navigation }: any) => {
   /* ================= SAVE ================= */
 
   const saveUser = async () => {
-  const existing = await AsyncStorage.getItem("users");
-  const users = existing ? JSON.parse(existing) : [];
-  users.push(form);
-  await AsyncStorage.setItem("users", JSON.stringify(users));
+    const existing = await AsyncStorage.getItem("users");
+    const users = existing ? JSON.parse(existing) : [];
 
-  Alert.alert("Success", "Account Created Successfully!", [
-    {
-      text: "OK",
-      onPress: () => navigation.replace("Home"),
-    },
-  ]);
-};
+    users.push(form);
+    await AsyncStorage.setItem("users", JSON.stringify(users));
 
+    Alert.alert("Success", "Account Created Successfully!", [
+      { text: "OK", onPress: () => navigation.replace("Home") },
+    ]);
+  };
 
   const progressWidth = `${(step / 4) * 100}%` as `${number}%`;
 
@@ -130,35 +128,24 @@ const SignupScreen = ({ navigation }: any) => {
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <View style={{ paddingTop: insets.top + 8, flex: 1 }}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+
           <View style={styles.headerRow}>
             {step > 1 && (
-              <TouchableOpacity
-                onPress={() => setStep(step - 1)}
-                style={{ paddingRight: 8 }}
-              >
+              <TouchableOpacity onPress={() => setStep(step - 1)} style={{ paddingRight: 8 }}>
                 <Ionicons name="arrow-back" size={22} />
               </TouchableOpacity>
             )}
             <View style={styles.progressBg}>
-              <View
-                style={[styles.progressFill, { width: progressWidth }]}
-              />
+              <View style={[styles.progressFill, { width: progressWidth }]} />
             </View>
           </View>
 
           {/* STEP 1 */}
           {step === 1 && (
             <>
-              <Text style={styles.title}>
-                What type of account do you like to create? 🤔
-              </Text>
-              <Text style={styles.subtitle}>
-                You can skip it if you're not sure.
-              </Text>
+              <Text style={styles.title}>What type of account do you like to create? 🤔</Text>
+              <Text style={styles.subtitle}>You can skip it if you're not sure.</Text>
 
               <OptionCard title="Personal" color="#4D96FF" icon="person" field="accountType" />
               <OptionCard title="Teacher" color="#FF9F1C" icon="school" field="accountType" />
@@ -174,12 +161,8 @@ const SignupScreen = ({ navigation }: any) => {
           {/* STEP 2 */}
           {step === 2 && (
             <>
-              <Text style={styles.title}>
-                Describe a workplace that suits you 💼
-              </Text>
-              <Text style={styles.subtitle}>
-                You can skip it if you're not sure.
-              </Text>
+              <Text style={styles.title}>Describe a workplace that suits you 💼</Text>
+              <Text style={styles.subtitle}>You can skip it if you're not sure.</Text>
 
               <OptionCard title="School" color="#4D96FF" icon="school" field="workplace" />
               <OptionCard title="Higher Education" color="#FF9F1C" icon="library" field="workplace" />
@@ -198,27 +181,16 @@ const SignupScreen = ({ navigation }: any) => {
               <Text style={styles.title}>Create an account ✏️</Text>
               <Text style={styles.subtitleCenter}>
                 Please complete your profile.{"\n"}
-                Don't worry, your data will remain private and only you can see it.
+                Don't worry, your data will remain private.
               </Text>
 
-              {/* FULL NAME */}
-              <LabelInput
-                label="Full Name"
-                value={form.fullName}
-                onChange={(t: string) =>
-                  setForm({ ...form, fullName: t })
-                }
+              <LabelInput label="Full Name" value={form.fullName}
+                onChange={(t: string) => setForm({ ...form, fullName: t })}
               />
               {errors.fullName && <Text style={styles.error}>{errors.fullName}</Text>}
 
-              {/* DATE PICKER */}
               <TouchableOpacity onPress={() => setShowDate(true)}>
-                <LabelInput
-                  label="Date of Birth"
-                  value={form.dob}
-                  icon="calendar-outline"
-                  onChange={() => {}}
-                />
+                <LabelInput label="Date of Birth" value={form.dob} icon="calendar-outline" onChange={() => {}} />
               </TouchableOpacity>
               {errors.dob && <Text style={styles.error}>{errors.dob}</Text>}
 
@@ -228,70 +200,42 @@ const SignupScreen = ({ navigation }: any) => {
                   mode="date"
                   maximumDate={new Date()}
                   display="default"
-                  onChange={(event, selectedDate) => {
+                  onChange={(e, d) => {
                     setShowDate(false);
-                    if (selectedDate) {
-                      setForm({
-                        ...form,
-                        dob: selectedDate.toDateString(),
-                      });
-                    }
+                    if (d) setForm({ ...form, dob: d.toDateString() });
                   }}
                 />
               )}
 
-              {/* PHONE */}
-              <LabelInput
-                label="Phone Number"
-                value={form.phone}
-                keyboardType="numeric"
-                onChange={(t: string) =>
-                  setForm({
-                    ...form,
-                    phone: t.replace(/[^0-9]/g, "").slice(0, 10),
-
-                  })
-                }
+              <LabelInput label="Phone Number" value={form.phone}
+                onChange={(t: string) => setForm({ ...form, phone: t.replace(/[^0-9]/g, "").slice(0, 10) })}
               />
               {errors.phone && <Text style={styles.error}>{errors.phone}</Text>}
 
-              {/* COUNTRY */}
               <TouchableOpacity onPress={() => setShowCountryList(!showCountryList)}>
-                <LabelInput
-                  label="Country"
-                  value={form.country}
-                  icon="chevron-down-outline"
-                  onChange={() => {}}
-                />
+                <LabelInput label="Country" value={form.country} icon="chevron-down-outline" onChange={() => {}} />
               </TouchableOpacity>
 
-              {showCountryList &&
-                countries.map((c) => (
-                  <TouchableOpacity
-                    key={c}
-                    onPress={() => {
-                      setForm({ ...form, country: c });
-                      setShowCountryList(false);
-                    }}
-                  >
-                    <Text style={{ padding: 8 }}>{c}</Text>
-                  </TouchableOpacity>
-                ))}
-
+              {showCountryList && countries.map((c) => (
+                <TouchableOpacity key={c} onPress={() => {
+                  setForm({ ...form, country: c });
+                  setShowCountryList(false);
+                }}>
+                  <Text style={{ padding: 8 }}>{c}</Text>
+                </TouchableOpacity>
+              ))}
               {errors.country && <Text style={styles.error}>{errors.country}</Text>}
 
-              {/* AGE */}
-              <LabelInput
-                label="Age"
-                value={form.age}
-                onChange={(t: string) =>
-                  setForm({
-                    ...form,
-                    age: t.replace(/[^0-9]/g, ""),
-                  })
-                }
+              <LabelInput label="Age" value={form.age}
+                onChange={(t: string) => setForm({ ...form, age: t.replace(/[^0-9]/g, "") })}
               />
               {errors.age && <Text style={styles.error}>{errors.age}</Text>}
+
+              {/* EMAIL */}
+              <LabelInput label="Email" value={form.email}
+                onChange={(t: string) => setForm({ ...form, email: t })}
+              />
+              {errors.email && <Text style={styles.error}>{errors.email}</Text>}
 
               <GradientButton text="Continue" onPress={validateStep3} />
             </>
@@ -302,36 +246,21 @@ const SignupScreen = ({ navigation }: any) => {
             <>
               <Text style={styles.title}>Create an account ✏️</Text>
               <Text style={styles.subtitle}>
-                Please enter your username, email address and password.
+                Please enter your username and password.
               </Text>
 
-              {renderInput("Username", (t: string) =>
-                setForm({ ...form, username: t })
-              )}
+              {renderInput("Username", (t: string) => setForm({ ...form, username: t }))}
               {errors.username && <Text style={styles.error}>{errors.username}</Text>}
-
-              {renderInput("Email", (t: string) =>
-                setForm({ ...form, email: t })
-              )}
-              {errors.email && <Text style={styles.error}>{errors.email}</Text>}
 
               <View style={styles.inputRow}>
                 <TextInput
                   style={styles.input}
                   placeholder="Password"
                   secureTextEntry={!showPassword}
-                  onChangeText={(t) =>
-                    setForm({ ...form, password: t })
-                  }
+                  onChangeText={(t) => setForm({ ...form, password: t })}
                 />
-                <TouchableOpacity
-                  onPress={() => setShowPassword(!showPassword)}
-                >
-                  <Ionicons
-                    name={showPassword ? "eye" : "eye-off"}
-                    size={18}
-                    color="#6C4EFF"
-                  />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                  <Ionicons name={showPassword ? "eye" : "eye-off"} size={18} color="#6C4EFF" />
                 </TouchableOpacity>
               </View>
               {errors.password && <Text style={styles.error}>{errors.password}</Text>}
@@ -341,64 +270,40 @@ const SignupScreen = ({ navigation }: any) => {
                 <Text style={{ marginLeft: 8 }}>Remember me</Text>
               </View>
 
-              {/* <Text style={styles.or}>or</Text> */}
-
-              {/* <TouchableOpacity style={styles.googleBtn}>
-                <FontAwesome name="google" size={18} />
-                <Text style={{ marginLeft: 8 }}>
-                  Continue with Google
-                </Text>
-              </TouchableOpacity> */}
-
               <GradientButton text="Sign up" onPress={validateStep4} />
             </>
           )}
+
         </ScrollView>
       </View>
     </SafeAreaView>
   );
 };
 
-/* ================= REUSABLE COMPONENTS ================= */
-
+/* reusable + styles unchanged */
 const LabelInput = ({ label, value, onChange, icon }: any) => (
   <View style={{ marginBottom: 20 }}>
     <Text style={styles.label}>{label}</Text>
     <View style={styles.inputRow}>
-      <TextInput
-        style={styles.input}
-        value={value}
-        onChangeText={onChange}
-      />
-      {icon && (
-        <Ionicons name={icon} size={18} color="#6C4EFF" />
-      )}
+      <TextInput style={styles.input} value={value} onChangeText={onChange} />
+      {icon && <Ionicons name={icon} size={18} color="#6C4EFF" />}
     </View>
   </View>
 );
 
 const renderInput = (placeholder: string, onChange: any) => (
   <View style={styles.inputRow}>
-    <TextInput
-      placeholder={placeholder}
-      style={styles.input}
-      onChangeText={onChange}
-    />
+    <TextInput placeholder={placeholder} style={styles.input} onChangeText={onChange} />
   </View>
 );
 
 const GradientButton = ({ text, onPress }: any) => (
   <TouchableOpacity style={styles.btnWrapper} onPress={onPress}>
-    <LinearGradient
-      colors={["#7B5CFF", "#5E3DF0"]}
-      style={styles.gradientBtn}
-    >
+    <LinearGradient colors={["#7B5CFF", "#5E3DF0"]} style={styles.gradientBtn}>
       <Text style={styles.btnText}>{text}</Text>
     </LinearGradient>
   </TouchableOpacity>
 );
-
-/* ================= STYLES ================= */
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#fff" },
@@ -406,7 +311,7 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: "row", alignItems: "center", marginBottom: 25 },
   progressBg: { flex: 1, height: 6, backgroundColor: "#E5E5E5", borderRadius: 10, marginLeft: 10 },
   progressFill: { height: 6, backgroundColor: "#6C4EFF", borderRadius: 10 },
-  title: { fontSize: 20, fontWeight: "700", marginBottom: 8,textAlign: "center" },
+  title: { fontSize: 20, fontWeight: "700", marginBottom: 8, textAlign: "center" },
   subtitle: { color: "#777", marginBottom: 20, textAlign: "center" },
   subtitleCenter: { color: "#777", marginBottom: 25, textAlign: "center" },
   label: { fontSize: 13, color: "#333", marginBottom: 6 },
@@ -417,19 +322,10 @@ const styles = StyleSheet.create({
   inputRow: { borderBottomWidth: 1, borderColor: "#6C4EFF", paddingVertical: 6, flexDirection: "row", alignItems: "center" },
   input: { flex: 1, fontSize: 14 },
   rememberRow: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
-  googleBtn: { flexDirection: "row", justifyContent: "center", alignItems: "center", backgroundColor: "#F5F5F5", padding: 14, borderRadius: 12, marginVertical: 10 },
-  or: { textAlign: "center", marginVertical: 10, color: "#888" },
   btnWrapper: { borderRadius: 25, overflow: "hidden", marginTop: 10 },
   gradientBtn: { paddingVertical: 18, alignItems: "center" },
   btnText: { color: "#fff", fontWeight: "700" },
-
-  /* ADDED */
-  error: {
-    color: "red",
-    fontSize: 12,
-    marginTop: -15,
-    marginBottom: 10,
-  },
+  error: { color: "red", fontSize: 12, marginTop: -15, marginBottom: 10 },
 });
 
 export default SignupScreen;
