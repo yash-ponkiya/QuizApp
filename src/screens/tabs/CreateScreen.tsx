@@ -17,6 +17,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 
+import AppHeader from "../ViewAll/ViewAllHeader";
+
 export default function CreateScreen() {
   const navigation: any = useNavigation();
 
@@ -29,7 +31,6 @@ export default function CreateScreen() {
 
   const [questions, setQuestions] = useState<any[]>([]);
 
-  /* ================= LOAD COLLECTIONS ================= */
   useEffect(() => {
     loadCollections();
   }, []);
@@ -39,7 +40,6 @@ export default function CreateScreen() {
     if (data) setCollections(JSON.parse(data));
   };
 
-  /* ================= IMAGE PICKER ================= */
   const pickImage = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) return;
@@ -55,7 +55,6 @@ export default function CreateScreen() {
     }
   };
 
-  /* ================= QUESTIONS ================= */
   const addQuestion = () => {
     setQuestions([
       ...questions,
@@ -85,14 +84,12 @@ export default function CreateScreen() {
     setQuestions(updated);
   };
 
-  /* ================= SAVE QUIZ ================= */
   const saveQuiz = async () => {
     if (!title.trim()) return Alert.alert("Title required");
     if (!selectedCollection) return Alert.alert("Select collection");
     if (questions.length === 0)
       return Alert.alert("Add at least one question");
 
-    /* 👉 GET CURRENT USER */
     const currentUserStr = await AsyncStorage.getItem("currentUser");
     const currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
 
@@ -110,8 +107,6 @@ export default function CreateScreen() {
       image: quizImage,
       collectionId: selectedCollection.id,
       questions,
-
-      /* ⭐ IMPORTANT */
       authorUsername: currentUser.username,
       authorEmail: currentUser.email,
     };
@@ -125,18 +120,10 @@ export default function CreateScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* HEADER */}
-        <View style={styles.header}>
-          <Ionicons
-            name="close"
-            size={24}
-            onPress={() => navigation.goBack()}
-          />
-          <Text style={styles.headerTitle}>Create Quiz</Text>
-          <View style={{ width: 24 }} />
-        </View>
+      {/* ✅ Reusable Header */}
+      <AppHeader title="Create Quiz" showBack />
 
+      <ScrollView showsVerticalScrollIndicator={false}>
         {/* IMAGE */}
         <TouchableOpacity style={styles.coverBox} onPress={pickImage}>
           {quizImage ? (
@@ -250,19 +237,6 @@ export default function CreateScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff", padding: 20 },
-
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-
-  headerTitle: {
-    flex: 1,
-    textAlign: "center",
-    fontWeight: "700",
-    fontSize: 18,
-  },
 
   coverBox: {
     height: 150,
