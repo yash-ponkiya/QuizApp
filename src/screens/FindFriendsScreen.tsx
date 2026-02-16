@@ -12,10 +12,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native";
+
+import AppHeader from "./ViewAll/ViewAllHeader";
 
 const FindFriendsScreen = () => {
-  const navigation: any = useNavigation();
   const [users, setUsers] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [isSearchMode, setIsSearchMode] = useState(false);
@@ -93,34 +93,29 @@ const FindFriendsScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        {isSearchMode ? (
-          <TouchableOpacity onPress={() => setIsSearchMode(false)}>
-            <Ionicons name="arrow-back" size={22} />
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={22} />
-          </TouchableOpacity>
-        )}
+      {/* ✅ Back always visible */}
+      <AppHeader
+        title="Find Friends"
+        showBack={true}
+      />
 
-        <Text style={styles.headerTitle}>Find Friends</Text>
-        <View style={{ width: 22 }} />
-      </View>
-
+      {/* Search box */}
       <View style={styles.searchBox}>
         <Ionicons name="search" size={18} color="#888" />
         <TextInput
           placeholder="Search email, name, or phone number"
           value={search}
-          onChangeText={setSearch}
+          onChangeText={(text) => {
+            setSearch(text);
+            setIsSearchMode(true);
+          }}
           style={styles.searchInput}
         />
       </View>
 
       {isSearchMode ? (
         <FlatList
-          data={filteredUsers}
+          data={search.length ? filteredUsers : users}
           keyExtractor={(item, i) => i.toString()}
           renderItem={renderUser}
         />
@@ -176,31 +171,78 @@ const OptionRow = ({ icon, title, subtitle, onPress }: any) => (
 );
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", padding: 20 },
-  header: { flexDirection: "row", justifyContent: "space-between", marginBottom: 20 },
-  headerTitle: { fontSize: 18, fontWeight: "700" },
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+    padding: 20,
+  },
+
   searchBox: {
-  flexDirection: "row",
-  alignItems: "center",
-  backgroundColor: "#F3F3F3",
-  borderRadius: 12,
-  paddingHorizontal: 12,
-  height: 44, 
-  marginBottom: 20,
-},
-searchInput: { flex: 1, marginLeft: 6 },
-  card: { borderRadius: 14, borderWidth: 1, borderColor: "#EEE", marginBottom: 24 },
-  optionRow: { flexDirection: "row", alignItems: "center", padding: 14, borderBottomWidth: 1, borderColor: "#EEE" },
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F3F3F3",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 44,
+    marginBottom: 20,
+  },
+
+  searchInput: { flex: 1, marginLeft: 6 },
+
+  card: {
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#EEE",
+    marginBottom: 24,
+  },
+
+  optionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 14,
+    borderBottomWidth: 1,
+    borderColor: "#EEE",
+  },
+
   optionTitle: { fontWeight: "600" },
   optionSub: { fontSize: 12, color: "#777" },
-  peopleHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: 12 },
+
+  peopleHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+
   peopleTitle: { fontSize: 16, fontWeight: "700" },
   viewAll: { color: "#6C4EFF", fontWeight: "600" },
-  userRow: { flexDirection: "row", alignItems: "center", marginBottom: 18 },
-  avatar: { width: 48, height: 48, borderRadius: 24, marginRight: 12 },
+
+  userRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 18,
+  },
+
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: 12,
+  },
+
   userName: { flex: 1, fontWeight: "600" },
-  followBtn: { backgroundColor: "#6C4EFF", paddingHorizontal: 14, paddingVertical: 6, borderRadius: 14 },
-  followText: { color: "#fff", fontSize: 12, fontWeight: "600" },
+
+  followBtn: {
+    backgroundColor: "#6C4EFF",
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 14,
+  },
+
+  followText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
 });
 
 export default FindFriendsScreen;
