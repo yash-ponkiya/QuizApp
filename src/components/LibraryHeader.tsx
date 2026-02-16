@@ -6,7 +6,7 @@ const LibraryHeader = () => {
   return (
     <View style={styles.header}>
       <View style={styles.left}>
-        <Ionicons name="library-outline" size={22} color="#6C63FF" />
+        <Ionicons name="help-circle" size={22} color="#6C63FF" />
         <Text style={styles.title}>Library</Text>
       </View>
 

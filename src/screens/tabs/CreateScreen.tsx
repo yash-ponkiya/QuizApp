@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// CreateScreen.tsx
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -7,163 +8,242 @@ import {
   TextInput,
   Image,
   Alert,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LinearGradient } from "expo-linear-gradient";
+import { useNavigation } from "@react-navigation/native";
 
-export default function CreateScreen({ navigation }: any) {
+export default function CreateScreen() {
+  const navigation: any = useNavigation();
+
   const [title, setTitle] = useState("");
-  const [visibleTo, setVisibleTo] = useState("Only Me");
+  const [quizImage, setQuizImage] = useState<string | null>(null);
+
+  const [collections, setCollections] = useState<any[]>([]);
+  const [selectedCollection, setSelectedCollection] = useState<any>(null);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [coverImage, setCoverImage] = useState<string | null>(null);
 
-  // 📸 PICK IMAGE
+  const [questions, setQuestions] = useState<any[]>([]);
+
+  /* ================= LOAD COLLECTIONS ================= */
+  useEffect(() => {
+    loadCollections();
+  }, []);
+
+  const loadCollections = async () => {
+    const data = await AsyncStorage.getItem("collections");
+    if (data) setCollections(JSON.parse(data));
+  };
+
+  /* ================= IMAGE PICKER ================= */
   const pickImage = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (!permission.granted) {
-      Alert.alert("Permission required", "Allow gallery access");
-      return;
-    }
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) return;
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.8,
       allowsEditing: true,
-      aspect: [4, 3],
     });
 
     if (!result.canceled) {
-      setCoverImage(result.assets[0].uri);
+      setQuizImage(result.assets[0].uri);
     }
   };
 
-  // ✅ CREATE COLLECTION
-  const createCollection = async () => {
-    if (!title.trim()) {
-      Alert.alert("Title required", "Please enter collection title");
+  /* ================= QUESTIONS ================= */
+  const addQuestion = () => {
+    setQuestions([
+      ...questions,
+      {
+        question: "",
+        options: ["", "", "", ""],
+        correctIndex: 0,
+      },
+    ]);
+  };
+
+  const updateQuestion = (qIndex: number, value: string) => {
+    const updated = [...questions];
+    updated[qIndex].question = value;
+    setQuestions(updated);
+  };
+
+  const updateOption = (qIndex: number, oIndex: number, value: string) => {
+    const updated = [...questions];
+    updated[qIndex].options[oIndex] = value;
+    setQuestions(updated);
+  };
+
+  const setCorrect = (qIndex: number, index: number) => {
+    const updated = [...questions];
+    updated[qIndex].correctIndex = index;
+    setQuestions(updated);
+  };
+
+  /* ================= SAVE QUIZ ================= */
+  const saveQuiz = async () => {
+    if (!title.trim()) return Alert.alert("Title required");
+    if (!selectedCollection) return Alert.alert("Select collection");
+    if (questions.length === 0)
+      return Alert.alert("Add at least one question");
+
+    /* 👉 GET CURRENT USER */
+    const currentUserStr = await AsyncStorage.getItem("currentUser");
+    const currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
+
+    if (!currentUser) {
+      Alert.alert("User not found");
       return;
     }
 
-    if (!coverImage) {
-      Alert.alert("Cover required", "Please add cover image");
-      return;
-    }
+    const existing = await AsyncStorage.getItem("quizzes");
+    const quizzes = existing ? JSON.parse(existing) : [];
 
-    try {
-      const existing = await AsyncStorage.getItem("collections");
-      const collections = existing ? JSON.parse(existing) : [];
+    const newQuiz = {
+      id: Date.now().toString(),
+      title,
+      image: quizImage,
+      collectionId: selectedCollection.id,
+      questions,
 
-      const newCollection = {
-        id: Date.now().toString(),
-        title,
-        image: coverImage,
-        visibleTo,
-      };
+      /* ⭐ IMPORTANT */
+      authorUsername: currentUser.username,
+      authorEmail: currentUser.email,
+    };
 
-      collections.push(newCollection);
+    quizzes.push(newQuiz);
+    await AsyncStorage.setItem("quizzes", JSON.stringify(quizzes));
 
-      await AsyncStorage.setItem(
-        "collections",
-        JSON.stringify(collections)
-      );
-
-      Alert.alert("Success", "Collection created");
-
-      setTitle("");
-      setCoverImage(null);
-      setVisibleTo("Only Me");
-
-      navigation.goBack?.();
-    } catch (e) {
-      Alert.alert("Error", "Failed to create collection");
-    }
+    Alert.alert("Quiz created");
+    navigation.goBack();
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* HEADER */}
-      <View style={styles.header}>
-        <Ionicons
-          name="close"
-          size={24}
-          onPress={() => navigation.goBack?.()}
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* HEADER */}
+        <View style={styles.header}>
+          <Ionicons
+            name="close"
+            size={24}
+            onPress={() => navigation.goBack()}
+          />
+          <Text style={styles.headerTitle}>Create Quiz</Text>
+          <View style={{ width: 24 }} />
+        </View>
+
+        {/* IMAGE */}
+        <TouchableOpacity style={styles.coverBox} onPress={pickImage}>
+          {quizImage ? (
+            <Image source={{ uri: quizImage }} style={styles.coverPreview} />
+          ) : (
+            <>
+              <Ionicons name="image-outline" size={34} color="#6C4EFF" />
+              <Text style={styles.addCover}>Add Quiz Image</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
+        {/* TITLE */}
+        <Text style={styles.label}>Quiz Title</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter quiz title"
+          value={title}
+          onChangeText={setTitle}
         />
-        <Text style={styles.headerTitle}>Create New Collection</Text>
-        <View style={{ width: 24 }} />
-      </View>
 
-      {/* COVER IMAGE */}
-      <TouchableOpacity style={styles.coverBox} onPress={pickImage}>
-        {coverImage ? (
-          <Image source={{ uri: coverImage }} style={styles.coverPreview} />
-        ) : (
-          <>
-            <Ionicons name="image-outline" size={34} color="#6C4EFF" />
-            <Text style={styles.addCover}>Add Cover Image</Text>
-          </>
+        {/* COLLECTION */}
+        <Text style={styles.label}>Collection</Text>
+
+        <TouchableOpacity
+          style={styles.dropdown}
+          onPress={() => setShowDropdown(!showDropdown)}
+        >
+          <Text>
+            {selectedCollection
+              ? selectedCollection.title
+              : "Select collection"}
+          </Text>
+          <Ionicons name="chevron-down" size={18} />
+        </TouchableOpacity>
+
+        {showDropdown && (
+          <View style={styles.dropdownMenu}>
+            {collections.map((c: any) => (
+              <TouchableOpacity
+                key={c.id}
+                style={styles.dropdownItem}
+                onPress={() => {
+                  setSelectedCollection(c);
+                  setShowDropdown(false);
+                }}
+              >
+                <Text>{c.title}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         )}
-      </TouchableOpacity>
 
-      {/* TITLE */}
-      <Text style={styles.label}>Title</Text>
-      <TextInput
-        placeholder="Enter a Collection Title"
-        value={title}
-        onChangeText={setTitle}
-        style={styles.input}
-      />
-
-      {/* VISIBLE */}
-      <Text style={styles.label}>Visible to</Text>
-
-      <TouchableOpacity
-        style={styles.dropdown}
-        onPress={() => setShowDropdown(!showDropdown)}
-      >
-        <Text style={styles.dropdownText}>{visibleTo}</Text>
-        <Ionicons name="chevron-down" size={18} color="#333" />
-      </TouchableOpacity>
-
-      {showDropdown && (
-        <View style={styles.dropdownMenu}>
-          <TouchableOpacity
-            style={styles.dropdownItem}
-            onPress={() => {
-              setVisibleTo("Only Me");
-              setShowDropdown(false);
-            }}
-          >
-            <Text>Only Me</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.dropdownItem}
-            onPress={() => {
-              setVisibleTo("Public");
-              setShowDropdown(false);
-            }}
-          >
-            <Text>Public</Text>
+        {/* QUESTIONS */}
+        <View style={styles.qHeader}>
+          <Text style={styles.label}>Questions</Text>
+          <TouchableOpacity onPress={addQuestion}>
+            <Text style={styles.addBtn}>+ Add</Text>
           </TouchableOpacity>
         </View>
-      )}
 
-      {/* CREATE */}
-      <TouchableOpacity
-        style={styles.buttonWrapper}
-        onPress={createCollection}
-      >
-        <LinearGradient
-          colors={["#7B5CFF", "#5E3DF0"]}
-          style={styles.button}
-        >
-          <Text style={styles.buttonText}>Create</Text>
-        </LinearGradient>
-      </TouchableOpacity>
+        {questions.map((q, qi) => (
+          <View key={qi} style={styles.qCard}>
+            <TextInput
+              placeholder={`Question ${qi + 1}`}
+              style={styles.qInput}
+              value={q.question}
+              onChangeText={(t) => updateQuestion(qi, t)}
+            />
+
+            {q.options.map((opt: string, oi: number) => (
+              <TouchableOpacity
+                key={oi}
+                style={[
+                  styles.optionRow,
+                  q.correctIndex === oi && styles.correct,
+                ]}
+                onPress={() => setCorrect(qi, oi)}
+              >
+                <TextInput
+                  placeholder={`Option ${oi + 1}`}
+                  style={styles.optionInput}
+                  value={opt}
+                  onChangeText={(t) => updateOption(qi, oi, t)}
+                />
+                {q.correctIndex === oi && (
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={20}
+                    color="#6C4EFF"
+                  />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        ))}
+
+        {/* SAVE */}
+        <TouchableOpacity style={styles.saveWrap} onPress={saveQuiz}>
+          <LinearGradient
+            colors={["#7B5CFF", "#5E3DF0"]}
+            style={styles.saveBtn}
+          >
+            <Text style={styles.saveText}>Create Quiz</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -174,47 +254,39 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 25,
+    marginBottom: 20,
   },
 
   headerTitle: {
     flex: 1,
     textAlign: "center",
-    fontSize: 18,
     fontWeight: "700",
+    fontSize: 18,
   },
 
   coverBox: {
+    height: 150,
+    borderRadius: 14,
     borderWidth: 2,
     borderColor: "#6C4EFF",
-    borderRadius: 14,
-    height: 150,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 30,
+    marginBottom: 20,
     backgroundColor: "#F8F7FF",
     overflow: "hidden",
   },
 
   coverPreview: { width: "100%", height: "100%" },
 
-  addCover: {
-    color: "#6C4EFF",
-    marginTop: 8,
-    fontWeight: "600",
-  },
+  addCover: { color: "#6C4EFF", marginTop: 6 },
 
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 6,
-  },
+  label: { fontWeight: "600", marginBottom: 6 },
 
   input: {
     borderBottomWidth: 1,
     borderColor: "#6C4EFF",
+    marginBottom: 20,
     paddingVertical: 8,
-    marginBottom: 25,
   },
 
   dropdown: {
@@ -223,32 +295,66 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
   },
-
-  dropdownText: { fontSize: 15 },
 
   dropdownMenu: {
     borderWidth: 1,
     borderColor: "#EEE",
     borderRadius: 10,
-    marginTop: 8,
-    backgroundColor: "#fff",
+    marginTop: 6,
+    marginBottom: 20,
   },
 
-  dropdownItem: { padding: 12 },
+  dropdownItem: { padding: 10 },
 
-  buttonWrapper: { marginTop: "auto" },
+  qHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
 
-  button: {
+  addBtn: { color: "#6C4EFF", fontWeight: "600" },
+
+  qCard: {
+    borderWidth: 1,
+    borderColor: "#EEE",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 14,
+  },
+
+  qInput: {
+    borderBottomWidth: 1,
+    borderColor: "#DDD",
+    marginBottom: 10,
+    paddingVertical: 6,
+  },
+
+  optionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#EEE",
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    marginBottom: 6,
+  },
+
+  optionInput: { flex: 1, paddingVertical: 6 },
+
+  correct: {
+    borderColor: "#6C4EFF",
+    backgroundColor: "#F4F2FF",
+  },
+
+  saveWrap: { marginTop: 30, marginBottom: 40 },
+
+  saveBtn: {
     paddingVertical: 16,
     borderRadius: 28,
     alignItems: "center",
   },
 
-  buttonText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 16,
-  },
+  saveText: { color: "#fff", fontWeight: "700", fontSize: 16 },
 });

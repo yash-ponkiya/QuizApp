@@ -13,6 +13,8 @@ import OtpScreen from "./src/screens/OtpScreen";
 import CreateNewPasswordScreen from "./src/screens/CreateNewPasswordScreen";
 import FindFriendsScreen from "./src/screens/FindFriendsScreen";
 import FollowedAuthorsScreen from "./src/screens/FollowedAuthorsScreen";
+import FollowedCollectionsScreen from "./src/screens/FollowedCollectionsScreen";
+import CreateCollections from "./src/screens/CreateCollections";
 import Toast from "react-native-toast-message";
 
 const Stack = createNativeStackNavigator();
@@ -66,6 +68,11 @@ export default function App() {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="FindFriends" component={FindFriendsScreen} />
         <Stack.Screen name="FollowedAuthors" component={FollowedAuthorsScreen} />
+        <Stack.Screen name="CreateCollection" component={CreateCollections} />
+        <Stack.Screen
+          name="Collections"
+          component={FollowedCollectionsScreen}
+        />
       </Stack.Navigator>
 
       <Toast />
