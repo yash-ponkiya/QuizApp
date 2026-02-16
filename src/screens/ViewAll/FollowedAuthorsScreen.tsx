@@ -8,12 +8,10 @@ import {
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native";
+import AppHeader from "./ViewAllHeader";
 
 export default function FollowedAuthorsScreen() {
-  const navigation: any = useNavigation();
   const [authors, setAuthors] = useState<any[]>([]);
 
   const getAvatar = (seed: string) =>
@@ -51,7 +49,6 @@ export default function FollowedAuthorsScreen() {
 
     await AsyncStorage.setItem("followedUsers", JSON.stringify(updated));
 
-    // update UI
     setAuthors(prev => prev.filter(u => u.email !== email));
   };
 
@@ -75,38 +72,25 @@ export default function FollowedAuthorsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* HEADER */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} />
-        </TouchableOpacity>
-
-        <Text style={styles.title}>Followed Authors</Text>
-
-        <View style={{ width: 22 }} />
-      </View>
+      <AppHeader title="Followed Authors" />
 
       <FlatList
         data={authors}
         keyExtractor={(item) => item.email}
         renderItem={renderItem}
         contentContainerStyle={{ paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", padding: 20 },
-
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+    padding: 20,
   },
-
-  title: { fontSize: 18, fontWeight: "700" },
 
   row: {
     flexDirection: "row",
@@ -121,7 +105,11 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
 
-  name: { flex: 1, fontWeight: "600" },
+  name: {
+    flex: 1,
+    fontWeight: "600",
+    fontSize: 15,
+  },
 
   unfollowBtn: {
     backgroundColor: "#E5E5E5",

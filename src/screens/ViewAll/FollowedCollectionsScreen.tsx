@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import AppHeader from "./ViewAllHeader";
 
 export default function FollowedCollectionsScreen() {
   const [collections, setCollections] = useState<any[]>([]);
@@ -17,7 +18,7 @@ export default function FollowedCollectionsScreen() {
   }, []);
 
   const loadCollections = async () => {
-    const data = await AsyncStorage.getItem("collections"); // ✅ ALL collections
+    const data = await AsyncStorage.getItem("collections");
     if (data) setCollections(JSON.parse(data));
     else setCollections([]);
   };
@@ -41,7 +42,7 @@ export default function FollowedCollectionsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>All Collections</Text>
+      <AppHeader title="All Collections" />
 
       {collections.length === 0 ? (
         <View style={styles.empty}>
@@ -68,12 +69,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     paddingHorizontal: 16,
     paddingTop: 10,
-  },
-
-  title: {
-    fontSize: 20,
-    fontWeight: "700",
-    marginBottom: 14,
   },
 
   card: {

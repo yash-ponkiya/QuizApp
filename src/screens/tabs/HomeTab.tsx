@@ -125,7 +125,7 @@ export default function HomeTab() {
               <View style={styles.sectionRow}>
                 <Text style={styles.sectionTitle}>Discover</Text>
                 <TouchableOpacity
-                  onPress={() => navigation.navigate("Discover")}
+                  onPress={() => navigation.navigate("DiscoverTest")}
                 >
                   <Text style={styles.viewAll}>View all →</Text>
                 </TouchableOpacity>
