@@ -16,6 +16,7 @@ import FollowedAuthorsScreen from "./src/screens/ViewAll/FollowedAuthorsScreen";
 import FollowedCollectionsScreen from "./src/screens/ViewAll/FollowedCollectionsScreen";
 import CreateCollections from "./src/screens/CreateCollections";
 import DiscoverTest from "./src/screens/ViewAll/DiscouverTest";
+import TestScreen from "./src/screens/tabs/TestScreen";
 import Toast from "react-native-toast-message";
 
 const Stack = createNativeStackNavigator();
@@ -71,6 +72,7 @@ export default function App() {
         <Stack.Screen name="FollowedAuthors" component={FollowedAuthorsScreen} />
         <Stack.Screen name="CreateCollection" component={CreateCollections} />
         <Stack.Screen name="DiscoverTest" component={DiscoverTest} />
+        <Stack.Screen name="TestScreen" component={TestScreen} />
         <Stack.Screen
           name="Collections"
           component={FollowedCollectionsScreen}

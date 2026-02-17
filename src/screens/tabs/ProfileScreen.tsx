@@ -6,12 +6,15 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
+  Modal,
   Alert,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function ProfileScreen() {
   const navigation: any = useNavigation();
@@ -23,9 +26,16 @@ export default function ProfileScreen() {
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [collections, setCollections] = useState<any[]>([]);
 
+  const [quizResults, setQuizResults] = useState<any[]>([]);
+
+  // ✅ RESULT MODAL STATE
+  const [selectedResult, setSelectedResult] = useState<any>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+
   useEffect(() => {
     loadUserData();
     loadMyData();
+    loadQuizResults();
   }, []);
 
   const loadUserData = async () => {
@@ -44,6 +54,11 @@ export default function ProfileScreen() {
 
     setQuizzes(q ? JSON.parse(q) : []);
     setCollections(c ? JSON.parse(c) : []);
+  };
+
+  const loadQuizResults = async () => {
+    const data = await AsyncStorage.getItem("quizResults");
+    setQuizResults(data ? JSON.parse(data).reverse() : []);
   };
 
   const deleteQuiz = async (id: string) => {
@@ -73,6 +88,12 @@ export default function ProfileScreen() {
   const handleLogout = async () => {
     await AsyncStorage.removeItem("currentUser");
     navigation.reset({ index: 0, routes: [{ name: "Login" }] });
+  };
+
+  // ✅ OPEN RESULT MODAL
+  const openResult = (result: any) => {
+    setSelectedResult(result);
+    setModalVisible(true);
   };
 
   if (loading) {
@@ -162,6 +183,25 @@ export default function ProfileScreen() {
           ))
         )}
 
+        {/* QUIZ RESULTS */}
+        <Text style={styles.sectionTitle}>My Quiz Results</Text>
+        {quizResults.length === 0 ? (
+          <Text style={styles.empty}>No quiz attempts</Text>
+        ) : (
+          quizResults.map((r) => (
+            <TouchableOpacity
+              key={r.id}
+              style={styles.resultCard}
+              onPress={() => openResult(r)}
+            >
+              <Text style={styles.resultTitle}>{r.quizTitle}</Text>
+              <Text style={styles.resultScore}>
+                {r.score}/{r.total}
+              </Text>
+            </TouchableOpacity>
+          ))
+        )}
+
         {/* LOGOUT */}
         <TouchableOpacity onPress={handleLogout}>
           <LinearGradient
@@ -172,6 +212,37 @@ export default function ProfileScreen() {
           </LinearGradient>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* RESULT MODAL */}
+      <Modal transparent visible={modalVisible} animationType="fade">
+        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+          
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Ionicons name="trophy" size={42} color="#FFD700" />
+
+            <Text style={styles.modalTitle}>
+              {selectedResult?.quizTitle}
+            </Text>
+
+            <Text style={styles.modalScore}>
+              {selectedResult?.score}/{selectedResult?.total}
+            </Text>
+
+            <Text style={styles.modalDate}>
+              {selectedResult?.date}
+            </Text>
+
+            <TouchableOpacity
+              style={styles.modalBtn}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.modalBtnText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -242,4 +313,63 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   buttonText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+
+  resultCard: {
+    borderWidth: 1,
+    borderColor: "#EEE",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+
+  resultTitle: { fontWeight: "600", color: "#333" },
+  resultScore: { color: "#6C4EFF", fontWeight: "700" },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "#00000066",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  modalBox: {
+    width: 260,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 24,
+    alignItems: "center",
+  },
+
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginTop: 10,
+    textAlign: "center",
+  },
+
+  modalScore: {
+    fontSize: 32,
+    fontWeight: "800",
+    color: "#6C4EFF",
+    marginVertical: 8,
+  },
+
+  modalDate: {
+    color: "#777",
+    marginBottom: 12,
+  },
+
+  modalBtn: {
+    backgroundColor: "#6C4EFF",
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+
+  modalBtnText: {
+    color: "#fff",
+    fontWeight: "700",
+  },
 });

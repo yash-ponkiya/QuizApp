@@ -5,6 +5,9 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Modal,
+  FlatList,
+  Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -20,6 +23,10 @@ export default function HomeTab() {
   const [authors, setAuthors] = useState<any[]>([]);
   const [collections, setCollections] = useState<any[]>([]);
   const [quizzes, setQuizzes] = useState<any[]>([]);
+  const [inviteCount, setInviteCount] = useState(0);
+
+  const [notifVisible, setNotifVisible] = useState(false);
+  const [invites, setInvites] = useState<any[]>([]);
 
   const getAvatar = (seed: string) =>
     `https://api.dicebear.com/7.x/avataaars/png?seed=${seed}`;
@@ -29,31 +36,29 @@ export default function HomeTab() {
     const followedData = await AsyncStorage.getItem("followedUsers");
     const collectionsData = await AsyncStorage.getItem("collections");
     const quizzesData = await AsyncStorage.getItem("quizzes");
+    const invitesData = await AsyncStorage.getItem("quizInvites");
+    const currentUserData = await AsyncStorage.getItem("currentUser");
 
     const users = usersData ? JSON.parse(usersData) : [];
     const followed = followedData ? JSON.parse(followedData) : [];
     const quizzesList = quizzesData ? JSON.parse(quizzesData) : [];
+    const invitesAll = invitesData ? JSON.parse(invitesData) : [];
+    const currentUser = currentUserData
+      ? JSON.parse(currentUserData)
+      : null;
 
-    /* ================= AUTHORS ================= */
+    /* AUTHORS */
     if (users.length && followed.length) {
-      const list = users.filter((u: any) => followed.includes(u.email));
-      setAuthors(list);
-    } else {
-      setAuthors([]);
-    }
+      setAuthors(users.filter((u: any) => followed.includes(u.email)));
+    } else setAuthors([]);
 
-    /* ================= COLLECTIONS ================= */
+    /* COLLECTIONS */
     if (collectionsData) {
       const all = JSON.parse(collectionsData);
-      const publicCollections = all.filter(
-        (c: any) => c.visibleTo === "Public"
-      );
-      setCollections(publicCollections);
-    } else {
-      setCollections([]);
-    }
+      setCollections(all.filter((c: any) => c.visibleTo === "Public"));
+    } else setCollections([]);
 
-    /* ================= QUIZZES + USERNAME ================= */
+    /* QUIZZES */
     if (quizzesList.length) {
       const enriched = quizzesList.map((q: any) => {
         const user = users.find(
@@ -72,18 +77,51 @@ export default function HomeTab() {
             "Unknown",
         };
       });
-
       setQuizzes(enriched);
+    } else setQuizzes([]);
+
+    /* INVITES */
+    if (currentUser) {
+      const myInvites = invitesAll.filter(
+        (i: any) =>
+          i.toEmail === currentUser.email && i.status === "pending"
+      );
+      setInviteCount(myInvites.length);
+      setInvites(myInvites);
     } else {
-      setQuizzes([]);
+      setInviteCount(0);
+      setInvites([]);
     }
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      loadData();
-    }, [])
-  );
+  useFocusEffect(useCallback(() => { loadData(); }, []));
+
+  /* ACCEPT / REJECT + REDIRECT */
+  const updateInvite = async (invite: any, status: string) => {
+    const data = await AsyncStorage.getItem("quizInvites");
+    const all = data ? JSON.parse(data) : [];
+
+    const updated = all.map((i: any) =>
+      i.id === invite.id ? { ...i, status } : i
+    );
+
+    await AsyncStorage.setItem("quizInvites", JSON.stringify(updated));
+
+    loadData();
+
+    if (status === "accepted") {
+      const quizzesData = await AsyncStorage.getItem("quizzes");
+      const quizzes = quizzesData ? JSON.parse(quizzesData) : [];
+
+      const quiz = quizzes.find((q: any) => q.id === invite.quizId);
+
+      setNotifVisible(false);
+
+      if (quiz) {
+        navigation.navigate("TestScreen", { quiz });
+      }
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -98,7 +136,20 @@ export default function HomeTab() {
 
             <View style={styles.headerIcons}>
               <Ionicons name="search" size={22} />
-              <Ionicons name="notifications-outline" size={22} />
+
+              {/* 🔔 BELL */}
+              <TouchableOpacity onPress={() => setNotifVisible(true)}>
+                <View>
+                  <Ionicons name="notifications-outline" size={22} />
+                  {inviteCount > 0 && (
+                    <View style={styles.badge}>
+                      <Text style={styles.badgeText}>
+                        {inviteCount}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -203,13 +254,62 @@ export default function HomeTab() {
           )}
         </View>
       </ScrollView>
+
+      {/* 🔔 NOTIFICATION MODAL */}
+      <Modal transparent visible={notifVisible} animationType="fade">
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setNotifVisible(false)}
+        >
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>Invitations</Text>
+
+            {invites.length === 0 && (
+              <Text style={styles.empty}>No invites</Text>
+            )}
+
+            <FlatList
+              data={invites}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <View style={styles.inviteRow}>
+                  <Text style={styles.inviteText}>
+                    <Text style={styles.bold}>
+                      {item.fromName}
+                    </Text>{" "}
+                    invited you to{" "}
+                    <Text style={styles.bold}>
+                      {item.quizTitle}
+                    </Text>
+                  </Text>
+
+                  <View style={styles.actions}>
+                    <TouchableOpacity
+                      style={styles.accept}
+                      onPress={() => updateInvite(item, "accepted")}
+                    >
+                      <Text style={styles.btnText}>Accept</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.reject}
+                      onPress={() => updateInvite(item, "rejected")}
+                    >
+                      <Text style={styles.btnText}>Reject</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            />
+          </View>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#fff" },
-
   container: { paddingHorizontal: 20, paddingTop: 10 },
 
   header: {
@@ -223,28 +323,30 @@ const styles = StyleSheet.create({
   logoText: { fontSize: 20, fontWeight: "700" },
   headerIcons: { flexDirection: "row", gap: 16 },
 
-  hero: {
-    borderRadius: 18,
-    padding: 20,
-    height: 150,
-    marginBottom: 20,
+  badge: {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    backgroundColor: "#FF3B30",
+    borderRadius: 10,
+    minWidth: 16,
+    height: 16,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
-  heroText: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "600",
-    marginBottom: 10,
-  },
+  badgeText: { color: "#fff", fontSize: 10, fontWeight: "700" },
 
+  hero: { borderRadius: 18, padding: 20, height: 150, marginBottom: 20 },
+  heroText: { color: "#fff", fontSize: 20, fontWeight: "600" },
   heroBtn: {
     backgroundColor: "#fff",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
+    marginTop: 10,
     alignSelf: "flex-start",
   },
-
   heroBtnText: { color: "#6C4EFF", fontWeight: "600" },
 
   sectionRow: {
@@ -256,4 +358,49 @@ const styles = StyleSheet.create({
 
   sectionTitle: { fontSize: 18, fontWeight: "700" },
   viewAll: { color: "#6C4EFF", fontWeight: "600" },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "#00000055",
+    justifyContent: "flex-start",
+    paddingTop: 80,
+    paddingHorizontal: 20,
+  },
+
+  modalBox: {
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    padding: 16,
+    maxHeight: 300,
+  },
+
+  modalTitle: { fontWeight: "700", fontSize: 16, marginBottom: 10 },
+  empty: { textAlign: "center", marginTop: 20, color: "#999" },
+
+  inviteRow: {
+    borderBottomWidth: 1,
+    borderColor: "#EEE",
+    paddingVertical: 10,
+  },
+
+  inviteText: { fontSize: 13 },
+  bold: { fontWeight: "700", color: "#6C4EFF" },
+
+  actions: { flexDirection: "row", gap: 10, marginTop: 6 },
+
+  accept: {
+    backgroundColor: "#4CAF50",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+
+  reject: {
+    backgroundColor: "#F44336",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+
+  btnText: { color: "#fff", fontSize: 12, fontWeight: "600" },
 });
