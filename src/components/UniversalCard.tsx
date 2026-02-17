@@ -55,11 +55,13 @@ export default function UniversalCard({
 const styles = StyleSheet.create({
 
   card: {
-    width: 170,
+    width: 200,
     marginRight: 14,
     borderRadius: 16,
     overflow: "hidden",
     backgroundColor: "#fff",
+    alignItems: "center",
+    alignSelf: "center",
   },
 
   image: {
