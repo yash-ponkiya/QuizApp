@@ -60,8 +60,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: "hidden",
     backgroundColor: "#fff",
-    alignItems: "center",
-    alignSelf: "center",
+
   },
 
   image: {

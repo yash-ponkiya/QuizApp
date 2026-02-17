@@ -10,6 +10,7 @@ import {
   FlatList,
   Alert,
   RefreshControl,
+  Share, // ✅ ADDED
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -26,7 +27,7 @@ export default function JoinScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedQuiz, setSelectedQuiz] = useState<any>(null);
   const [followedAuthors, setFollowedAuthors] = useState<any[]>([]);
-  const [refreshing, setRefreshing] = useState(false); // ✅ NEW
+  const [refreshing, setRefreshing] = useState(false);
 
   const getAvatar = (seed: string) =>
     `https://api.dicebear.com/7.x/avataaars/png?seed=${seed}`;
@@ -35,7 +36,6 @@ export default function JoinScreen() {
     loadAll();
   }, []);
 
-  /* LOAD ALL DATA */
   const loadAll = async () => {
     await Promise.all([
       loadQuizzes(),
@@ -44,7 +44,6 @@ export default function JoinScreen() {
     ]);
   };
 
-  /* PULL REFRESH */
   const onRefresh = async () => {
     setRefreshing(true);
     await loadAll();
@@ -102,6 +101,18 @@ export default function JoinScreen() {
     setModalVisible(true);
   };
 
+  /* ✅ SHARE FUNCTION ADDED */
+  const shareQuiz = async (quiz: any) => {
+    try {
+      await Share.share({
+        title: quiz.title,
+        message: `🎯 Try this quiz: "${quiz.title}"\n${quiz.questions.length} questions`,
+      });
+    } catch (error) {
+      console.log("Share error:", error);
+    }
+  };
+
   const inviteAuthor = async (author: any) => {
     const currentUserData = await AsyncStorage.getItem("currentUser");
     const currentUser = currentUserData
@@ -141,8 +152,8 @@ export default function JoinScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={["#6C4EFF"]} // Android
-            tintColor="#6C4EFF" // iOS
+            colors={["#6C4EFF"]}
+            tintColor="#6C4EFF"
           />
         }
       >
@@ -196,6 +207,18 @@ export default function JoinScreen() {
               onPress={() => openInviteModal(quiz)}
             >
               <Ionicons name="person-add" size={20} color="#6C4EFF" />
+            </TouchableOpacity>
+
+            {/* ✅ SHARE BUTTON ADDED */}
+            <TouchableOpacity
+              style={styles.iconBtn}
+              onPress={() => shareQuiz(quiz)}
+            >
+              <Ionicons
+                name="share-social-outline"
+                size={20}
+                color="#6C4EFF"
+              />
             </TouchableOpacity>
           </View>
         ))}
@@ -256,6 +279,7 @@ export default function JoinScreen() {
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff", padding: 20 },

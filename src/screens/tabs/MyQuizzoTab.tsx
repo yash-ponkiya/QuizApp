@@ -8,8 +8,11 @@ import {
   Image,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
 
 export default function MyQuizzoTab() {
+  const navigation: any = useNavigation();
+
   const [active, setActive] = useState<"Quizzo" | "Collections">("Collections");
   const [collections, setCollections] = useState<any[]>([]);
   const [quizzes, setQuizzes] = useState<any[]>([]);
@@ -28,22 +31,35 @@ export default function MyQuizzoTab() {
     }
   };
 
-  const renderCard = ({ item }: any) => (
-    <View style={styles.card}>
-      <Image
-        source={{
-          uri:
-            item.image ||
-            item.img ||
-            "https://images.unsplash.com/photo-1522202176988-66273c2fd55f",
+  const renderCard = ({ item }: any) => {
+    const isQuiz = active === "Quizzo";
+
+    return (
+      <TouchableOpacity
+        style={styles.card}
+        activeOpacity={isQuiz ? 0.8 : 1}
+        onPress={() => {
+          if (isQuiz) {
+            navigation.navigate("TestScreen", { quiz: item });
+          }
         }}
-        style={styles.image}
-      />
-      <View style={styles.overlay}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
-      </View>
-    </View>
-  );
+      >
+        <Image
+          source={{
+            uri:
+              item.image ||
+              item.img ||
+              "https://images.unsplash.com/photo-1522202176988-66273c2fd55f",
+          }}
+          style={styles.image}
+        />
+
+        <View style={styles.overlay}>
+          <Text style={styles.cardTitle}>{item.title}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   const dataToShow = active === "Collections" ? collections : quizzes;
 
