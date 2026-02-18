@@ -138,7 +138,6 @@ export default function HomeTab() {
                 <Ionicons name="search" size={22} />
               </TouchableOpacity>
 
-              {/* 🔔 BELL */}
               <TouchableOpacity onPress={() => setNotifVisible(true)}>
                 <View>
                   <Ionicons name="notifications-outline" size={22} />
@@ -215,12 +214,20 @@ export default function HomeTab() {
 
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 {authors.map((u, i) => (
-                  <UniversalCard
+                  <TouchableOpacity
                     key={i}
-                    variant="author"
-                    image={getAvatar(u.email)}
-                    title={u.fullName}
-                  />
+                    onPress={() =>
+                      navigation.navigate("AuthorProfile", {
+                        user: u,
+                      })
+                    }
+                  >
+                    <UniversalCard
+                      variant="author"
+                      image={getAvatar(u.email)}
+                      title={u.fullName}
+                    />
+                  </TouchableOpacity>
                 ))}
               </ScrollView>
             </>
@@ -256,13 +263,12 @@ export default function HomeTab() {
         </View>
       </ScrollView>
 
-      {/* 🔔 NOTIFICATION MODAL (SCROLL FIXED) */}
+      {/* NOTIFICATION MODAL */}
       <Modal transparent visible={notifVisible} animationType="fade">
         <Pressable
           style={styles.modalOverlay}
           onPress={() => setNotifVisible(false)}
         >
-          {/* prevent close when touching content */}
           <Pressable style={styles.modalBox}>
             <Text style={styles.modalTitle}>Invitations</Text>
 

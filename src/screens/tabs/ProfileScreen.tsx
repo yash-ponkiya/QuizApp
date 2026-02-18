@@ -196,7 +196,7 @@ export default function ProfileScreen() {
         )}
 
         {/* QUIZ RESULTS */}
-        <Text style={styles.sectionTitle}>My Quiz Results</Text>
+        {/* <Text style={styles.sectionTitle}>My Quiz Results</Text>
         {quizResults.length === 0 ? (
           <Text style={styles.empty}>No quiz attempts</Text>
         ) : (
@@ -212,7 +212,7 @@ export default function ProfileScreen() {
               </Text>
             </TouchableOpacity>
           ))
-        )}
+        )} */}
 
         {/* LOGOUT */}
         <TouchableOpacity onPress={handleLogout}>

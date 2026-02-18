@@ -15,7 +15,6 @@ import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
-
 import AppHeader from "../ViewAll/ViewAllHeader";
 
 export default function CreateScreen() {
@@ -29,6 +28,7 @@ export default function CreateScreen() {
   const [showDropdown, setShowDropdown] = useState(false);
 
   const [questions, setQuestions] = useState<any[]>([]);
+  const [errors, setErrors] = useState<any>({});
 
   useEffect(() => {
     loadCollections();
@@ -54,22 +54,10 @@ export default function CreateScreen() {
     }
   };
 
-  const resetQuiz = () => {
-    setTitle("");
-    setQuizImage(null);
-    setSelectedCollection(null);
-    setQuestions([]);
-    setShowDropdown(false);
-  };
-
   const addQuestion = () => {
     setQuestions([
       ...questions,
-      {
-        question: "",
-        options: ["", "", "", ""],
-        correctIndex: 0,
-      },
+      { question: "", options: ["", ""], correctIndex: 0 },
     ]);
   };
 
@@ -91,25 +79,66 @@ export default function CreateScreen() {
     setQuestions(updated);
   };
 
+  const addOption = (qIndex: number) => {
+    const updated = [...questions];
+    updated[qIndex].options.push("");
+    setQuestions(updated);
+  };
+
+  const removeOption = (qIndex: number, oIndex: number) => {
+    const updated = [...questions];
+    if (updated[qIndex].options.length <= 2) return;
+    updated[qIndex].options.splice(oIndex, 1);
+    setQuestions(updated);
+  };
+
   const setCorrect = (qIndex: number, index: number) => {
     const updated = [...questions];
     updated[qIndex].correctIndex = index;
     setQuestions(updated);
   };
 
+  const validate = () => {
+    let valid = true;
+    let newErrors: any = {};
+
+    if (!title.trim()) {
+      newErrors.title = "Title required";
+      valid = false;
+    }
+
+    if (!selectedCollection) {
+      newErrors.collection = "Select collection";
+      valid = false;
+    }
+
+    questions.forEach((q, qi) => {
+      if (!q.question.trim()) {
+        newErrors[`q_${qi}`] = "Question required";
+        valid = false;
+      }
+      q.options.forEach((opt: string, oi: number) => {
+        if (!opt.trim()) {
+          newErrors[`q_${qi}_o_${oi}`] = "Option required";
+          valid = false;
+        }
+      });
+    });
+
+    if (questions.length === 0) {
+      newErrors.questions = "Add at least one question";
+      valid = false;
+    }
+
+    setErrors(newErrors);
+    return valid;
+  };
+
   const saveQuiz = async () => {
-    if (!title.trim()) return Alert.alert("Title required");
-    if (!selectedCollection) return Alert.alert("Select collection");
-    if (questions.length === 0)
-      return Alert.alert("Add at least one question");
+    if (!validate()) return;
 
     const currentUserStr = await AsyncStorage.getItem("currentUser");
     const currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
-
-    if (!currentUser) {
-      Alert.alert("User not found");
-      return;
-    }
 
     const existing = await AsyncStorage.getItem("quizzes");
     const quizzes = existing ? JSON.parse(existing) : [];
@@ -122,6 +151,7 @@ export default function CreateScreen() {
       questions,
       authorUsername: currentUser.username,
       authorEmail: currentUser.email,
+      createdBy: currentUser.email,
     };
 
     quizzes.push(newQuiz);
@@ -136,11 +166,7 @@ export default function CreateScreen() {
       <AppHeader title="Create Quiz" showBack />
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        <TouchableOpacity style={styles.newQuizBtn} onPress={resetQuiz}>
-          <Ionicons name="add-circle" size={18} color="#6C4EFF" />
-          <Text style={styles.newQuizText}>Create New Quiz</Text>
-        </TouchableOpacity>
-
+        {/* COVER */}
         <TouchableOpacity style={styles.coverBox} onPress={pickImage}>
           {quizImage ? (
             <Image source={{ uri: quizImage }} style={styles.coverPreview} />
@@ -152,6 +178,7 @@ export default function CreateScreen() {
           )}
         </TouchableOpacity>
 
+        {/* TITLE */}
         <Text style={styles.label}>Quiz Title</Text>
         <TextInput
           style={styles.input}
@@ -159,11 +186,11 @@ export default function CreateScreen() {
           value={title}
           onChangeText={setTitle}
         />
+        {errors.title && <Text style={styles.error}>{errors.title}</Text>}
 
         {/* COLLECTION */}
         <Text style={styles.label}>Collection</Text>
 
-        {/* ✅ DROPDOWN WRAPPER (relative) */}
         <View style={styles.dropdownWrapper}>
           <TouchableOpacity
             style={styles.dropdown}
@@ -177,7 +204,10 @@ export default function CreateScreen() {
             <Ionicons name="chevron-down" size={18} />
           </TouchableOpacity>
 
-          {/* ✅ FLOATING DROPDOWN */}
+          {errors.collection && (
+            <Text style={styles.error}>{errors.collection}</Text>
+          )}
+
           {showDropdown && (
             <View style={styles.dropdownMenu}>
               {collections.map((c: any) => (
@@ -204,6 +234,10 @@ export default function CreateScreen() {
           </TouchableOpacity>
         </View>
 
+        {errors.questions && (
+          <Text style={styles.error}>{errors.questions}</Text>
+        )}
+
         {questions.map((q, qi) => (
           <View key={qi} style={styles.qCard}>
             <View style={styles.qTopRow}>
@@ -219,35 +253,53 @@ export default function CreateScreen() {
               value={q.question}
               onChangeText={(t) => updateQuestion(qi, t)}
             />
+            {errors[`q_${qi}`] && (
+              <Text style={styles.error}>{errors[`q_${qi}`]}</Text>
+            )}
 
             {q.options.map((opt: string, oi: number) => (
-              <TouchableOpacity
-                key={oi}
-                style={[
-                  styles.optionRow,
-                  q.correctIndex === oi && styles.correct,
-                ]}
-                onPress={() => setCorrect(qi, oi)}
-              >
-                <Ionicons
-                  name={
-                    q.correctIndex === oi
-                      ? "radio-button-on"
-                      : "radio-button-off"
-                  }
-                  size={20}
-                  color={q.correctIndex === oi ? "#6C4EFF" : "#AAA"}
-                  style={{ marginRight: 6 }}
-                />
+              <View key={oi}>
+                <View style={styles.optionRow}>
+                  <TouchableOpacity onPress={() => setCorrect(qi, oi)}>
+                    <Ionicons
+                      name={
+                        q.correctIndex === oi
+                          ? "radio-button-on"
+                          : "radio-button-off"
+                      }
+                      size={20}
+                      color={q.correctIndex === oi ? "#6C4EFF" : "#AAA"}
+                    />
+                  </TouchableOpacity>
 
-                <TextInput
-                  placeholder={`Option ${oi + 1}`}
-                  style={styles.optionInput}
-                  value={opt}
-                  onChangeText={(t) => updateOption(qi, oi, t)}
-                />
-              </TouchableOpacity>
+                  <TextInput
+                    placeholder={`Option ${oi + 1}`}
+                    style={styles.optionInput}
+                    value={opt}
+                    onChangeText={(t) => updateOption(qi, oi, t)}
+                  />
+
+                  {q.options.length > 2 && (
+                    <TouchableOpacity onPress={() => removeOption(qi, oi)}>
+                      <Ionicons name="close" size={18} color="#F44336" />
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                {errors[`q_${qi}_o_${oi}`] && (
+                  <Text style={styles.error}>
+                    {errors[`q_${qi}_o_${oi}`]}
+                  </Text>
+                )}
+              </View>
             ))}
+
+            <TouchableOpacity
+              style={styles.addOptionBtn}
+              onPress={() => addOption(qi)}
+            >
+              <Text style={styles.addOptionText}>+ Add option</Text>
+            </TouchableOpacity>
           </View>
         ))}
 
@@ -266,15 +318,6 @@ export default function CreateScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff", padding: 20 },
-
-  newQuizBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 14,
-  },
-
-  newQuizText: { color: "#6C4EFF", fontWeight: "600" },
 
   coverBox: {
     height: 150,
@@ -296,13 +339,13 @@ const styles = StyleSheet.create({
   input: {
     borderBottomWidth: 1,
     borderColor: "#6C4EFF",
-    marginBottom: 20,
+    marginBottom: 4,
     paddingVertical: 8,
   },
 
   dropdownWrapper: {
-    position: "relative",
     marginBottom: 20,
+    position: "relative",   // ⭐ important
   },
 
   dropdown: {
@@ -314,8 +357,8 @@ const styles = StyleSheet.create({
   },
 
   dropdownMenu: {
-    position: "absolute",
-    top: 45,
+    position: "absolute",   // ⭐ overlay
+    top: 40,                // under field
     left: 0,
     right: 0,
     borderWidth: 1,
@@ -356,7 +399,7 @@ const styles = StyleSheet.create({
   qInput: {
     borderBottomWidth: 1,
     borderColor: "#DDD",
-    marginBottom: 10,
+    marginBottom: 4,
     paddingVertical: 6,
   },
 
@@ -367,14 +410,20 @@ const styles = StyleSheet.create({
     borderColor: "#EEE",
     borderRadius: 8,
     paddingHorizontal: 8,
-    marginBottom: 6,
+    marginTop: 6,
   },
 
-  optionInput: { flex: 1, paddingVertical: 6 },
+  optionInput: {
+    flex: 1,
+    paddingVertical: 6,
+    marginLeft: 6,
+  },
 
-  correct: {
-    borderColor: "#6C4EFF",
-    backgroundColor: "#F4F2FF",
+  addOptionBtn: { marginTop: 8 },
+
+  addOptionText: {
+    color: "#6C4EFF",
+    fontWeight: "600",
   },
 
   saveWrap: { marginTop: 30, marginBottom: 40 },
@@ -386,4 +435,11 @@ const styles = StyleSheet.create({
   },
 
   saveText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+
+  error: {
+    color: "#F44336",
+    fontSize: 12,
+    marginBottom: 6,
+    marginTop: 2,
+  },
 });

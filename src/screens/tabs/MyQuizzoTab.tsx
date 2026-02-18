@@ -8,28 +8,58 @@ import {
   Image,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 
 export default function MyQuizzoTab() {
   const navigation: any = useNavigation();
+  const route: any = useRoute();
 
+  const profileUser = route.params?.user;
+
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [active, setActive] = useState<"Quizzo" | "Collections">("Collections");
   const [collections, setCollections] = useState<any[]>([]);
   const [quizzes, setQuizzes] = useState<any[]>([]);
 
   useEffect(() => {
+    loadUser();
+  }, []);
+
+  useEffect(() => {
     loadData();
   }, [active]);
+
+  const loadUser = async () => {
+    const cu = await AsyncStorage.getItem("currentUser");
+    if (cu) setCurrentUser(JSON.parse(cu));
+  };
 
   const loadData = async () => {
     if (active === "Collections") {
       const data = await AsyncStorage.getItem("collections");
-      setCollections(data ? JSON.parse(data) : []);
+      const list = data ? JSON.parse(data) : [];
+
+      if (profileUser) {
+        setCollections(list.filter((i: any) => i.createdBy === profileUser.email));
+      } else {
+        setCollections(list);
+      }
     } else {
       const data = await AsyncStorage.getItem("quizzes");
-      setQuizzes(data ? JSON.parse(data) : []);
+      const list = data ? JSON.parse(data) : [];
+
+      if (profileUser) {
+        setQuizzes(list.filter((i: any) => i.createdBy === profileUser.email));
+      } else {
+        setQuizzes(list);
+      }
     }
   };
+
+  const isOwner =
+    currentUser?.email &&
+    profileUser?.email &&
+    currentUser.email === profileUser.email;
 
   const renderCard = ({ item }: any) => {
     const isQuiz = active === "Quizzo";
@@ -65,6 +95,16 @@ export default function MyQuizzoTab() {
 
   return (
     <View style={{ flex: 1 }}>
+      {/* ✅ EDIT BUTTON (ONLY OWNER) */}
+      {isOwner && (
+        <TouchableOpacity
+          style={styles.editBtn}
+          onPress={() => navigation.navigate("Profile")}
+        >
+          <Text style={styles.editText}>Edit Profile</Text>
+        </TouchableOpacity>
+      )}
+
       {/* TOGGLE */}
       <View style={styles.toggle}>
         <TouchableOpacity
@@ -130,6 +170,19 @@ export default function MyQuizzoTab() {
 }
 
 const styles = StyleSheet.create({
+  editBtn: {
+    borderWidth: 1,
+    borderColor: "#6C63FF",
+    borderRadius: 20,
+    paddingVertical: 8,
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  editText: {
+    color: "#6C63FF",
+    fontWeight: "700",
+  },
+
   toggle: {
     flexDirection: "row",
     backgroundColor: "#F1EEFF",
