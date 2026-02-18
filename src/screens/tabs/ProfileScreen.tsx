@@ -25,10 +25,8 @@ export default function ProfileScreen() {
 
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [collections, setCollections] = useState<any[]>([]);
-
   const [quizResults, setQuizResults] = useState<any[]>([]);
 
-  // ✅ RESULT MODAL STATE
   const [selectedResult, setSelectedResult] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -51,7 +49,6 @@ export default function ProfileScreen() {
   const loadMyData = async () => {
     const q = await AsyncStorage.getItem("quizzes");
     const c = await AsyncStorage.getItem("collections");
-
     setQuizzes(q ? JSON.parse(q) : []);
     setCollections(c ? JSON.parse(c) : []);
   };
@@ -90,7 +87,6 @@ export default function ProfileScreen() {
     navigation.reset({ index: 0, routes: [{ name: "Login" }] });
   };
 
-  // ✅ OPEN RESULT MODAL
   const openResult = (result: any) => {
     setSelectedResult(result);
     setModalVisible(true);
@@ -129,6 +125,22 @@ export default function ProfileScreen() {
             </View>
           </TouchableOpacity>
         )}
+
+        {/* ✅ GIVEN QUIZZES CARD */}
+        <TouchableOpacity
+          style={styles.givenCard}
+          onPress={() => navigation.navigate("GivenQuizzes")}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Ionicons name="trophy-outline" size={20} color="#6C4EFF" />
+            <Text style={styles.givenTitle}>Given Quizzes</Text>
+          </View>
+
+          <View style={styles.givenRight}>
+            <Text style={styles.givenCount}>{quizResults.length}</Text>
+            <Ionicons name="chevron-forward" size={18} color="#999" />
+          </View>
+        </TouchableOpacity>
 
         {/* DETAILS */}
         {showDetails && userData && (
@@ -216,31 +228,30 @@ export default function ProfileScreen() {
       {/* RESULT MODAL */}
       <Modal transparent visible={modalVisible} animationType="fade">
         <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-          
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <Ionicons name="trophy" size={42} color="#FFD700" />
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalBox}>
+              <Ionicons name="trophy" size={42} color="#FFD700" />
 
-            <Text style={styles.modalTitle}>
-              {selectedResult?.quizTitle}
-            </Text>
+              <Text style={styles.modalTitle}>
+                {selectedResult?.quizTitle}
+              </Text>
 
-            <Text style={styles.modalScore}>
-              {selectedResult?.score}/{selectedResult?.total}
-            </Text>
+              <Text style={styles.modalScore}>
+                {selectedResult?.score}/{selectedResult?.total}
+              </Text>
 
-            <Text style={styles.modalDate}>
-              {selectedResult?.date}
-            </Text>
+              <Text style={styles.modalDate}>
+                {selectedResult?.date}
+              </Text>
 
-            <TouchableOpacity
-              style={styles.modalBtn}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.modalBtnText}>Close</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalBtn}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.modalBtnText}>Close</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
         </TouchableWithoutFeedback>
       </Modal>
     </SafeAreaView>
@@ -269,6 +280,36 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 20,
   },
+
+  /* GIVEN QUIZ CARD */
+  givenCard: {
+    borderWidth: 1,
+    borderColor: "#EEE",
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  givenTitle: {
+    marginLeft: 8,
+    fontWeight: "600",
+    fontSize: 15,
+  },
+
+  givenRight: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  givenCount: {
+    fontWeight: "700",
+    color: "#6C4EFF",
+    marginRight: 6,
+  },
+
   name: { fontSize: 18, fontWeight: "700", color: "#222" },
   email: { color: "#666", marginBottom: 12 },
   row: { flexDirection: "row", marginTop: 4 },

@@ -10,14 +10,14 @@ import {
   FlatList,
   Alert,
   RefreshControl,
-  Share, // ✅ ADDED
+  Share,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import AppHeader from "../ViewAll/ViewAllHeader";
-import { TouchableWithoutFeedback } from "react-native";
 
 export default function JoinScreen() {
   const navigation: any = useNavigation();
@@ -28,6 +28,8 @@ export default function JoinScreen() {
   const [selectedQuiz, setSelectedQuiz] = useState<any>(null);
   const [followedAuthors, setFollowedAuthors] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+
+  const [invitedMap, setInvitedMap] = useState<any>({}); // ✅ ADDED
 
   const getAvatar = (seed: string) =>
     `https://api.dicebear.com/7.x/avataaars/png?seed=${seed}`;
@@ -96,12 +98,24 @@ export default function JoinScreen() {
     setFollowedAuthors(list);
   };
 
-  const openInviteModal = (quiz: any) => {
+  /* ✅ LOAD INVITES WHEN MODAL OPENS */
+  const openInviteModal = async (quiz: any) => {
     setSelectedQuiz(quiz);
+
+    const data = await AsyncStorage.getItem("quizInvites");
+    const invites = data ? JSON.parse(data) : [];
+
+    const map: any = {};
+    invites
+      .filter((i: any) => i.quizId === quiz.id && i.status === "pending")
+      .forEach((i: any) => {
+        map[i.toEmail] = true;
+      });
+
+    setInvitedMap(map);
     setModalVisible(true);
   };
 
-  /* ✅ SHARE FUNCTION ADDED */
   const shareQuiz = async (quiz: any) => {
     try {
       await Share.share({
@@ -113,6 +127,7 @@ export default function JoinScreen() {
     }
   };
 
+  /* ✅ TOGGLE INVITE */
   const inviteAuthor = async (author: any) => {
     const currentUserData = await AsyncStorage.getItem("currentUser");
     const currentUser = currentUserData
@@ -120,26 +135,45 @@ export default function JoinScreen() {
       : null;
 
     const data = await AsyncStorage.getItem("quizInvites");
-    const invites = data ? JSON.parse(data) : [];
+    let invites = data ? JSON.parse(data) : [];
 
-    invites.push({
-      id: Date.now().toString(),
-      quizId: selectedQuiz.id,
-      quizTitle: selectedQuiz.title,
-      toEmail: author.email,
-      fromEmail: currentUser?.email,
-      fromName:
-        currentUser?.username || currentUser?.fullName || "User",
-      status: "pending",
-      createdAt: Date.now(),
-    });
+    const existing = invites.find(
+      (i: any) =>
+        i.quizId === selectedQuiz.id &&
+        i.toEmail === author.email &&
+        i.status === "pending"
+    );
+
+    if (existing) {
+      // cancel invite
+      invites = invites.filter((i: any) => i.id !== existing.id);
+
+      setInvitedMap((prev: any) => {
+        const copy = { ...prev };
+        delete copy[author.email];
+        return copy;
+      });
+    } else {
+      // send invite
+      invites.push({
+        id: Date.now().toString(),
+        quizId: selectedQuiz.id,
+        quizTitle: selectedQuiz.title,
+        toEmail: author.email,
+        fromEmail: currentUser?.email,
+        fromName:
+          currentUser?.username || currentUser?.fullName || "User",
+        status: "pending",
+        createdAt: Date.now(),
+      });
+
+      setInvitedMap((prev: any) => ({
+        ...prev,
+        [author.email]: true,
+      }));
+    }
 
     await AsyncStorage.setItem("quizInvites", JSON.stringify(invites));
-
-    Alert.alert(
-      "Invite Sent",
-      `${author.fullName} invited to "${selectedQuiz.title}"`
-    );
   };
 
   return (
@@ -163,7 +197,6 @@ export default function JoinScreen() {
 
         {quizzes.map((quiz) => (
           <View key={quiz.id} style={styles.card}>
-            {/* OPEN QUIZ */}
             <TouchableOpacity
               style={{ flexDirection: "row", flex: 1 }}
               onPress={() =>
@@ -185,7 +218,6 @@ export default function JoinScreen() {
               </View>
             </TouchableOpacity>
 
-            {/* ❤️ FAVORITE */}
             <TouchableOpacity
               style={styles.iconBtn}
               onPress={() => toggleFavorite(quiz)}
@@ -201,7 +233,6 @@ export default function JoinScreen() {
               />
             </TouchableOpacity>
 
-            {/* INVITE */}
             <TouchableOpacity
               style={styles.iconBtn}
               onPress={() => openInviteModal(quiz)}
@@ -209,7 +240,6 @@ export default function JoinScreen() {
               <Ionicons name="person-add" size={20} color="#6C4EFF" />
             </TouchableOpacity>
 
-            {/* ✅ SHARE BUTTON ADDED */}
             <TouchableOpacity
               style={styles.iconBtn}
               onPress={() => shareQuiz(quiz)}
@@ -224,11 +254,12 @@ export default function JoinScreen() {
         ))}
       </ScrollView>
 
-      {/* INVITE MODAL */}
+      {/* MODAL */}
       <Modal visible={modalVisible} animationType="slide" transparent>
         <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
           <View style={styles.modalOverlay} />
         </TouchableWithoutFeedback>
+
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
             <View style={styles.modalHeader}>
@@ -252,26 +283,40 @@ export default function JoinScreen() {
             <FlatList
               data={followedAuthors}
               keyExtractor={(item) => item.email}
-              renderItem={({ item }) => (
-                <View style={styles.authorRow}>
-                  <View style={styles.authorLeft}>
-                    <Image
-                      source={{ uri: getAvatar(item.email) }}
-                      style={styles.avatar}
-                    />
-                    <Text style={styles.authorName}>
-                      {item.fullName}
-                    </Text>
-                  </View>
+              renderItem={({ item }) => {
+                const invited = invitedMap[item.email]; // ✅ ADDED
 
-                  <TouchableOpacity
-                    style={styles.sendBtn}
-                    onPress={() => inviteAuthor(item)}
-                  >
-                    <Text style={styles.sendText}>Invite</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
+                return (
+                  <View style={styles.authorRow}>
+                    <View style={styles.authorLeft}>
+                      <Image
+                        source={{ uri: getAvatar(item.email) }}
+                        style={styles.avatar}
+                      />
+                      <Text style={styles.authorName}>
+                        {item.fullName}
+                      </Text>
+                    </View>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.sendBtn,
+                        invited && styles.invitingBtn,
+                      ]}
+                      onPress={() => inviteAuthor(item)}
+                    >
+                      <Text
+                        style={[
+                          styles.sendText,
+                          invited && styles.invitingText,
+                        ]}
+                      >
+                        {invited ? "Inviting" : "Invite"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              }}
             />
           </View>
         </View>
@@ -279,7 +324,6 @@ export default function JoinScreen() {
     </SafeAreaView>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff", padding: 20 },
@@ -359,4 +403,12 @@ const styles = StyleSheet.create({
   },
 
   sendText: { color: "#fff", fontWeight: "600" },
+
+  invitingBtn: {
+    backgroundColor: "#E5E5EA",
+  },
+
+  invitingText: {
+    color: "#333",
+  },
 });

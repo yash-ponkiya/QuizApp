@@ -1,8 +1,12 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-const LibraryHeader = () => {
+type Props = {
+  onSearch?: () => void;
+};
+
+const LibraryHeader = ({ onSearch }: Props) => {
   return (
     <View style={styles.header}>
       <View style={styles.left}>
@@ -10,7 +14,9 @@ const LibraryHeader = () => {
         <Text style={styles.title}>Library</Text>
       </View>
 
-      <Ionicons name="search-outline" size={22} color="#333" />
+      <TouchableOpacity onPress={onSearch}>
+        <Ionicons name="search-outline" size={22} color="#333" />
+      </TouchableOpacity>
     </View>
   );
 };

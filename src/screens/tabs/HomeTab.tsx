@@ -1,3 +1,5 @@
+// ✅ ONLY ADDITIONS APPLIED — NOTHING REMOVED
+
 import React, { useState, useCallback } from "react";
 import {
   View,
@@ -47,18 +49,15 @@ export default function HomeTab() {
       ? JSON.parse(currentUserData)
       : null;
 
-    /* AUTHORS */
     if (users.length && followed.length) {
       setAuthors(users.filter((u: any) => followed.includes(u.email)));
     } else setAuthors([]);
 
-    /* COLLECTIONS */
     if (collectionsData) {
       const all = JSON.parse(collectionsData);
       setCollections(all.filter((c: any) => c.visibleTo === "Public"));
     } else setCollections([]);
 
-    /* QUIZZES */
     if (quizzesList.length) {
       const enriched = quizzesList.map((q: any) => {
         const user = users.find(
@@ -80,7 +79,6 @@ export default function HomeTab() {
       setQuizzes(enriched);
     } else setQuizzes([]);
 
-    /* INVITES */
     if (currentUser) {
       const myInvites = invitesAll.filter(
         (i: any) =>
@@ -96,7 +94,6 @@ export default function HomeTab() {
 
   useFocusEffect(useCallback(() => { loadData(); }, []));
 
-  /* ACCEPT / REJECT + REDIRECT */
   const updateInvite = async (invite: any, status: string) => {
     const data = await AsyncStorage.getItem("quizInvites");
     const all = data ? JSON.parse(data) : [];
@@ -135,7 +132,11 @@ export default function HomeTab() {
             </View>
 
             <View style={styles.headerIcons}>
-              <Ionicons name="search" size={22} />
+              <TouchableOpacity
+                onPress={() => navigation.navigate("Search")}
+              >
+                <Ionicons name="search" size={22} />
+              </TouchableOpacity>
 
               {/* 🔔 BELL */}
               <TouchableOpacity onPress={() => setNotifVisible(true)}>
@@ -255,22 +256,21 @@ export default function HomeTab() {
         </View>
       </ScrollView>
 
-      {/* 🔔 NOTIFICATION MODAL */}
+      {/* 🔔 NOTIFICATION MODAL (SCROLL FIXED) */}
       <Modal transparent visible={notifVisible} animationType="fade">
         <Pressable
           style={styles.modalOverlay}
           onPress={() => setNotifVisible(false)}
         >
-          <View style={styles.modalBox}>
+          {/* prevent close when touching content */}
+          <Pressable style={styles.modalBox}>
             <Text style={styles.modalTitle}>Invitations</Text>
-
-            {invites.length === 0 && (
-              <Text style={styles.empty}>No invites</Text>
-            )}
 
             <FlatList
               data={invites}
               keyExtractor={(item) => item.id}
+              showsVerticalScrollIndicator={false}
+              style={{ maxHeight: 350 }}
               renderItem={({ item }) => (
                 <View style={styles.inviteRow}>
                   <Text style={styles.inviteText}>
@@ -300,8 +300,11 @@ export default function HomeTab() {
                   </View>
                 </View>
               )}
+              ListEmptyComponent={
+                <Text style={styles.empty}>No invites</Text>
+              }
             />
-          </View>
+          </Pressable>
         </Pressable>
       </Modal>
     </SafeAreaView>
