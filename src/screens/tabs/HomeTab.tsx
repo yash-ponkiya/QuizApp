@@ -194,6 +194,7 @@ export default function HomeTab() {
                     title={q.title}
                     subtitle={q.authorName}
                     avatar={`https://i.pravatar.cc/100?u=${q.authorName}`}
+                    onPress={() => navigation.navigate("QuizDetail", { quiz: q })}
                   />
                 ))}
               </ScrollView>
@@ -214,22 +215,18 @@ export default function HomeTab() {
 
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 {authors.map((u, i) => (
-                  <TouchableOpacity
+                  <UniversalCard
                     key={i}
+                    variant="author"
+                    image={getAvatar(u.email)}
+                    title={u.fullName}
                     onPress={() =>
-                      navigation.navigate("AuthorProfile", {
-                        user: u,
-                      })
+                      navigation.navigate("AuthorProfile", { user: u })
                     }
-                  >
-                    <UniversalCard
-                      variant="author"
-                      image={getAvatar(u.email)}
-                      title={u.fullName}
-                    />
-                  </TouchableOpacity>
+                  />
                 ))}
               </ScrollView>
+
             </>
           )}
 

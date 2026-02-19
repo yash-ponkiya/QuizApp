@@ -224,11 +224,11 @@ export default function JoinScreen() {
             >
               <Ionicons
                 name={
-                  isFavorite(quiz.id) ? "heart" : "heart-outline"
+                  isFavorite(quiz.id) ? "star" : "star-outline"
                 }
                 size={20}
                 color={
-                  isFavorite(quiz.id) ? "#FF3B30" : "#6C4EFF"
+                  isFavorite(quiz.id) ? "#FFD700" : "#6C4EFF"
                 }
               />
             </TouchableOpacity>

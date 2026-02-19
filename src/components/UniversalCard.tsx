@@ -1,5 +1,11 @@
 import React from "react";
-import { View, Text, Image, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 
 type Props = {
   image: string;
@@ -7,6 +13,7 @@ type Props = {
   subtitle?: string;
   avatar?: string;
   variant?: "discover" | "author" | "collection";
+  onPress?: () => void;
 };
 
 export default function UniversalCard({
@@ -15,9 +22,14 @@ export default function UniversalCard({
   subtitle,
   avatar,
   variant = "discover",
+  onPress,
 }: Props) {
   return (
-    <View style={[styles.card, variant === "author" && styles.authorCard]}>
+    <TouchableOpacity
+      activeOpacity={0.85}
+      onPress={onPress}
+      style={[styles.card, variant === "author" && styles.authorCard]}
+    >
       <Image source={{ uri: image }} style={styles.image} />
 
       {variant === "author" && (
@@ -33,7 +45,9 @@ export default function UniversalCard({
           </Text>
 
           <View style={styles.row}>
-            {avatar && <Image source={{ uri: avatar }} style={styles.avatar} />}
+            {avatar && (
+              <Image source={{ uri: avatar }} style={styles.avatar} />
+            )}
             <Text style={styles.textSecondary} numberOfLines={1}>
               {subtitle}
             </Text>
@@ -48,12 +62,11 @@ export default function UniversalCard({
           </Text>
         </View>
       )}
-    </View>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-
   card: {
     width: 200,
     marginRight: 14,
@@ -61,7 +74,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     backgroundColor: "#fff",
     marginBottom: 12,
-
   },
 
   image: {
@@ -69,12 +81,12 @@ const styles = StyleSheet.create({
     height: 100,
   },
 
-
   textPrimary: {
     fontSize: 14,
     fontWeight: "600",
     color: "#222",
     marginTop: 6,
+    paddingHorizontal: 6,
   },
 
   textSecondary: {
@@ -92,6 +104,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginTop: 4,
+    paddingHorizontal: 6,
+    marginBottom: 6,
   },
 
   avatar: {

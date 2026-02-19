@@ -16,6 +16,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import QRCode from "react-native-qrcode-svg";
 
+
 export default function QuizDetail() {
   const navigation: any = useNavigation();
   const route: any = useRoute();

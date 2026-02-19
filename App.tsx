@@ -72,6 +72,7 @@ export default function App() {
           component={CreateNewPasswordScreen}
         />
         <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="QuizDetail" component={QuizDetail} />
         <Stack.Screen name="FindFriends" component={FindFriendsScreen} />
         <Stack.Screen name="FollowedAuthors" component={FollowedAuthorsScreen} />
         <Stack.Screen name="CreateCollection" component={CreateCollections} />
@@ -80,7 +81,7 @@ export default function App() {
         <Stack.Screen name="Search" component={SearchScreen} />
         <Stack.Screen name="GivenQuizzes" component={GivenQuizzesScreen} />
         <Stack.Screen name="AuthorProfile" component={AuthorProfileScreen} />
-        <Stack.Screen name="QuizDetail" component={QuizDetail} />
+        
         <Stack.Screen
           name="Collections"
           component={FollowedCollectionsScreen}

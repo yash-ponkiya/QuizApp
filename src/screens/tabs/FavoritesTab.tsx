@@ -10,12 +10,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 
 import AppHeader from "../ViewAll/ViewAllHeader";
 
 export default function FavoritesTab() {
   const navigation: any = useNavigation();
   const [favorites, setFavorites] = useState<any[]>([]);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   /* LOAD FAVORITES */
   const loadFavorites = async () => {
@@ -44,7 +46,7 @@ export default function FavoritesTab() {
     <View style={styles.card}>
       <TouchableOpacity
         style={{ flexDirection: "row", flex: 1 }}
-        onPress={() => navigation.navigate("TestScreen", { quiz: item })}
+        onPress={() => navigation.navigate("QuizDetail", { quiz: item })}
       >
         {item.image && (
           <Image source={{ uri: item.image }} style={styles.image} />
@@ -66,7 +68,14 @@ export default function FavoritesTab() {
         style={styles.removeBtn}
         onPress={() => removeFavorite(item.id)}
       >
-        <Text style={styles.removeText}>Remove</Text>
+        <Text style={styles.removeText}>
+          <Ionicons
+            name="trash"
+            size={20}
+            color="#FF3B30"
+          />
+          
+        </Text>
       </TouchableOpacity>
     </View>
   );
