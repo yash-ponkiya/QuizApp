@@ -357,8 +357,8 @@ const styles = StyleSheet.create({
   },
 
   dropdownMenu: {
-    position: "absolute",   // ⭐ overlay
-    top: 40,                // under field
+    position: "absolute",
+    top: 40, 
     left: 0,
     right: 0,
     borderWidth: 1,

@@ -70,7 +70,7 @@ export default function MyQuizzoTab() {
         activeOpacity={isQuiz ? 0.8 : 1}
         onPress={() => {
           if (isQuiz) {
-            navigation.navigate("TestScreen", { quiz: item });
+            navigation.navigate("QuizDetail", { quiz: item });
           }
         }}
       >
@@ -233,15 +233,21 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   overlay: {
-    position: "absolute",
-    bottom: 6,
-    left: 8,
-  },
-  cardTitle: {
-    color: "#000",
-    fontWeight: "700",
-    fontSize: 14,
-  },
+  position: "absolute",
+  bottom: 0,
+  left: 0,
+  right: 0,
+  backgroundColor: "rgba(0,0,0,0.30)",
+  paddingVertical: 6,
+  paddingHorizontal: 8,
+},
+
+cardTitle: {
+  color: "#fff",
+  fontWeight: "700",
+  fontSize: 14,
+},
+
 
   empty: {
     flex: 1,

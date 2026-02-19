@@ -32,7 +32,6 @@ const LibraryScreen = () => {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
-        {/* ✅ DIRECT USE */}
         <LibraryHeader onSearch={openSearch} />
 
         <LibraryTabs

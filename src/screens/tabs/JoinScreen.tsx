@@ -200,7 +200,7 @@ export default function JoinScreen() {
             <TouchableOpacity
               style={{ flexDirection: "row", flex: 1 }}
               onPress={() =>
-                navigation.navigate("TestScreen", { quiz })
+                navigation.navigate("QuizDetail", { quiz })
               }
             >
               {quiz.image && (
@@ -254,7 +254,6 @@ export default function JoinScreen() {
         ))}
       </ScrollView>
 
-      {/* MODAL */}
       <Modal visible={modalVisible} animationType="slide" transparent>
         <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
           <View style={styles.modalOverlay} />
@@ -264,7 +263,7 @@ export default function JoinScreen() {
           <View style={styles.modalBox}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                Invite Followed Authors
+                Invite Friends To Play
               </Text>
 
               <TouchableOpacity

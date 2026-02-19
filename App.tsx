@@ -20,6 +20,7 @@ import TestScreen from "./src/screens/tabs/TestScreen";
 import SearchScreen from "./src/screens/SearchScreen";
 import GivenQuizzesScreen from "./src/screens/GivenQuizzesScreen";
 import AuthorProfileScreen from "./src/components/AuthorProfileScreen";
+import QuizDetail from "./src/components/QuizDetail";
 import Toast from "react-native-toast-message";
 
 const Stack = createNativeStackNavigator();
@@ -79,6 +80,7 @@ export default function App() {
         <Stack.Screen name="Search" component={SearchScreen} />
         <Stack.Screen name="GivenQuizzes" component={GivenQuizzesScreen} />
         <Stack.Screen name="AuthorProfile" component={AuthorProfileScreen} />
+        <Stack.Screen name="QuizDetail" component={QuizDetail} />
         <Stack.Screen
           name="Collections"
           component={FollowedCollectionsScreen}

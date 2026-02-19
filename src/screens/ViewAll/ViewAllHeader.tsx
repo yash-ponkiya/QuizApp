@@ -6,6 +6,7 @@ import { useNavigation } from "@react-navigation/native";
 type Props = {
   title: string;
   showBack?: boolean;
+  onBack?: () => void;
 };
 
 export default function AppHeader({ title, showBack = true }: Props) {
