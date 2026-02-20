@@ -17,7 +17,6 @@ import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import AppHeader from "../ViewAll/ViewAllHeader";
-import App from "../../../App";
 
 export default function ProfileScreen() {
   const navigation: any = useNavigation();
@@ -27,7 +26,6 @@ export default function ProfileScreen() {
   const [showDetails, setShowDetails] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  // ✅ ADDED EDIT MODES
   const [editQuizMode, setEditQuizMode] = useState(false);
   const [editCollectionMode, setEditCollectionMode] = useState(false);
 
@@ -37,6 +35,10 @@ export default function ProfileScreen() {
 
   const [selectedResult, setSelectedResult] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
+
+  // ✅ ADDED: pending delete buffers
+  const [pendingDeleteQuizzes, setPendingDeleteQuizzes] = useState<string[]>([]);
+  const [pendingDeleteCollections, setPendingDeleteCollections] = useState<string[]>([]);
 
   useEffect(() => {
     loadUserData();
@@ -74,29 +76,58 @@ export default function ProfileScreen() {
     setQuizResults(data ? JSON.parse(data).reverse() : []);
   };
 
-  const deleteQuiz = async (id: string) => {
-    const updated = quizzes.filter((q) => q.id !== id);
+  // ✅ HARD DELETE (final)
+  const deleteQuiz = async (ids: string[]) => {
+    const updated = quizzes.filter((q) => !ids.includes(q.id));
     setQuizzes(updated);
     await AsyncStorage.setItem("quizzes", JSON.stringify(updated));
   };
 
-  const deleteCollection = async (id: string) => {
-    const updated = collections.filter((c) => c.id !== id);
+  const deleteCollection = async (ids: string[]) => {
+    const updated = collections.filter((c) => !ids.includes(c.id));
     setCollections(updated);
     await AsyncStorage.setItem("collections", JSON.stringify(updated));
   };
 
-  const confirmDeleteQuiz = (id: string) =>
-    Alert.alert("Delete Quiz", "Are you sure?", [
-      { text: "Cancel" },
-      { text: "Delete", onPress: () => deleteQuiz(id) },
-    ]);
+  const markQuizForDelete = (id: string) => {
+    setPendingDeleteQuizzes((prev) => [...prev, id]);
+  };
 
-  const confirmDeleteCollection = (id: string) =>
-    Alert.alert("Delete Collection", "Are you sure?", [
-      { text: "Cancel" },
-      { text: "Delete", onPress: () => deleteCollection(id) },
-    ]);
+  const markCollectionForDelete = (id: string) => {
+    setPendingDeleteCollections((prev) => [...prev, id]);
+  };
+
+  const toggleQuizEdit = () => {
+    if (editQuizMode && pendingDeleteQuizzes.length > 0) {
+      Alert.alert("Delete Quizzes", "Confirm delete selected quizzes?", [
+        { text: "Cancel", onPress: () => setPendingDeleteQuizzes([]) },
+        {
+          text: "Delete",
+          onPress: () => {
+            deleteQuiz(pendingDeleteQuizzes);
+            setPendingDeleteQuizzes([]);
+          },
+        },
+      ]);
+    }
+    setEditQuizMode(!editQuizMode);
+  };
+
+  const toggleCollectionEdit = () => {
+    if (editCollectionMode && pendingDeleteCollections.length > 0) {
+      Alert.alert("Delete Collections", "Confirm delete selected collections?", [
+        { text: "Cancel", onPress: () => setPendingDeleteCollections([]) },
+        {
+          text: "Delete",
+          onPress: () => {
+            deleteCollection(pendingDeleteCollections);
+            setPendingDeleteCollections([]);
+          },
+        },
+      ]);
+    }
+    setEditCollectionMode(!editCollectionMode);
+  };
 
   const handleLogout = async () => {
     await AsyncStorage.removeItem("currentUser");
@@ -116,6 +147,10 @@ export default function ProfileScreen() {
     );
   }
 
+  // ✅ filtered lists (hide soft-deleted)
+  const visibleQuizzes = quizzes.filter((q) => !pendingDeleteQuizzes.includes(q.id));
+  const visibleCollections = collections.filter((c) => !pendingDeleteCollections.includes(c.id));
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -131,7 +166,6 @@ export default function ProfileScreen() {
       >
         <AppHeader title="Profile" showBack />
 
-        {/* PROFILE CARD */}
         {!showDetails && userData && (
           <TouchableOpacity
             style={styles.card}
@@ -152,7 +186,6 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         )}
 
-        {/* GIVEN QUIZZES */}
         <TouchableOpacity
           style={styles.givenCard}
           onPress={() => navigation.navigate("GivenQuizzes")}
@@ -168,7 +201,6 @@ export default function ProfileScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* DETAILS */}
         {showDetails && userData && (
           <>
             <Text style={styles.subtitle}>Full profile information</Text>
@@ -189,111 +221,87 @@ export default function ProfileScreen() {
           </>
         )}
 
-        {/* MY QUIZZES HEADER */}
+        {/* MY QUIZZES */}
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
           <Text style={styles.sectionTitle}>My Quizzes</Text>
           {quizzes.length > 0 && (
-            <TouchableOpacity
-              onPress={() => setEditQuizMode(!editQuizMode)}
-              style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
-            >
+            <TouchableOpacity onPress={toggleQuizEdit}>
               <Ionicons
                 name={editQuizMode ? "checkmark-circle" : "create-outline"}
                 size={25}
                 color="#6C4EFF"
-                style={styles.editbutton} 
-                
+                style={styles.editbutton}
               />
             </TouchableOpacity>
-
           )}
         </View>
 
-        {quizzes.length === 0 ? (
+        {visibleQuizzes.length === 0 ? (
           <Text style={styles.empty}>No quizzes</Text>
         ) : (
-          quizzes.map((q) => (
+          visibleQuizzes.map((q) => (
             <View key={q.id} style={styles.itemRow}>
               <Text style={styles.itemTitle}>{q.title}</Text>
 
               {editQuizMode && (
-                <TouchableOpacity onPress={() => confirmDeleteQuiz(q.id)}>
-                  <Ionicons name="trash" size={18} color="#FF3B30" style={{marginRight:7}} />
+                <TouchableOpacity onPress={() => markQuizForDelete(q.id)}>
+                  <Ionicons name="trash" size={18} color="#FF3B30" style={{ marginRight: 7 }} />
                 </TouchableOpacity>
               )}
             </View>
           ))
         )}
 
-        {/* MY COLLECTIONS HEADER */}
+        {/* MY COLLECTIONS */}
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
           <Text style={styles.sectionTitle}>My Collections</Text>
           {collections.length > 0 && (
-            <TouchableOpacity
-              onPress={() => setEditCollectionMode(!editCollectionMode)}
-              style={{ flexDirection: "row", alignItems: "center" }}
-            >
+            <TouchableOpacity onPress={toggleCollectionEdit}>
               <Ionicons
                 name={editCollectionMode ? "checkmark-circle" : "create-outline"}
                 size={25}
                 color="#6C4EFF"
                 style={styles.editbutton}
-                
               />
             </TouchableOpacity>
           )}
         </View>
 
-        {collections.length === 0 ? (
+        {visibleCollections.length === 0 ? (
           <Text style={styles.empty}>No collections</Text>
         ) : (
-          collections.map((c) => (
+          visibleCollections.map((c) => (
             <View key={c.id} style={styles.itemRow}>
               <Text style={styles.itemTitle}>{c.title}</Text>
 
               {editCollectionMode && (
-                <TouchableOpacity onPress={() => confirmDeleteCollection(c.id)}>
-                  <Ionicons name="trash" size={18} color="#FF3B30" style={{marginRight:7}} />
+                <TouchableOpacity onPress={() => markCollectionForDelete(c.id)}>
+                  <Ionicons name="trash" size={18} color="#FF3B30" style={{ marginRight: 7 }} />
                 </TouchableOpacity>
               )}
             </View>
           ))
         )}
 
-        {/* LOGOUT */}
         <TouchableOpacity onPress={handleLogout}>
-          <LinearGradient
-            colors={["#7B5CFF", "#5E3DF0"]}
-            style={styles.button}
-          >
+          <LinearGradient colors={["#7B5CFF", "#5E3DF0"]} style={styles.button}>
             <Text style={styles.buttonText}>Logout</Text>
           </LinearGradient>
         </TouchableOpacity>
       </ScrollView>
 
-      {/* RESULT MODAL */}
+      {/* RESULT MODAL (unchanged) */}
       <Modal transparent visible={modalVisible} animationType="fade">
         <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalBox}>
               <Ionicons name="trophy" size={42} color="#FFD700" />
-
-              <Text style={styles.modalTitle}>
-                {selectedResult?.quizTitle}
-              </Text>
-
+              <Text style={styles.modalTitle}>{selectedResult?.quizTitle}</Text>
               <Text style={styles.modalScore}>
                 {selectedResult?.score}/{selectedResult?.total}
               </Text>
-
-              <Text style={styles.modalDate}>
-                {selectedResult?.date}
-              </Text>
-
-              <TouchableOpacity
-                style={styles.modalBtn}
-                onPress={() => setModalVisible(false)}
-              >
+              <Text style={styles.modalDate}>{selectedResult?.date}</Text>
+              <TouchableOpacity style={styles.modalBtn} onPress={() => setModalVisible(false)}>
                 <Text style={styles.modalBtnText}>Close</Text>
               </TouchableOpacity>
             </View>
@@ -303,7 +311,6 @@ export default function ProfileScreen() {
     </SafeAreaView>
   );
 }
-
 
 const InfoRow = ({ label, value }: any) => (
   <View style={styles.infoContainer}>

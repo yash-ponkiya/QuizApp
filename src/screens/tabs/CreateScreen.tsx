@@ -39,6 +39,14 @@ export default function CreateScreen() {
     if (data) setCollections(JSON.parse(data));
   };
 
+  const resetQuiz = () => {
+    setTitle("");
+    setQuizImage(null);
+    setSelectedCollection(null);
+    setQuestions([]);
+    setErrors({});
+  };
+
   const pickImage = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) return;
@@ -158,7 +166,8 @@ export default function CreateScreen() {
     await AsyncStorage.setItem("quizzes", JSON.stringify(quizzes));
 
     Alert.alert("Quiz created");
-    navigation.goBack();
+
+    resetQuiz(); // ⭐ stay on screen ready for next quiz
   };
 
   return (
@@ -166,6 +175,12 @@ export default function CreateScreen() {
       <AppHeader title="Create Quiz" showBack />
 
       <ScrollView showsVerticalScrollIndicator={false}>
+        {/* ⭐ CREATE NEW QUIZ BUTTON */}
+        <TouchableOpacity style={styles.newQuizBtn} onPress={resetQuiz}>
+          <Ionicons name="add-circle" size={18} color="#6C4EFF" />
+          <Text style={styles.newQuizText}>Create New Quiz</Text>
+        </TouchableOpacity>
+
         {/* COVER */}
         <TouchableOpacity style={styles.coverBox} onPress={pickImage}>
           {quizImage ? (
@@ -319,6 +334,17 @@ export default function CreateScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff", padding: 20 },
 
+  newQuizBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 14,
+  },
+  newQuizText: {
+    color: "#6C4EFF",
+    fontWeight: "700",
+    marginLeft: 6,
+  },
+
   coverBox: {
     height: 150,
     borderRadius: 14,
@@ -345,7 +371,7 @@ const styles = StyleSheet.create({
 
   dropdownWrapper: {
     marginBottom: 20,
-    position: "relative",   // ⭐ important
+    position: "relative",
   },
 
   dropdown: {
@@ -358,7 +384,7 @@ const styles = StyleSheet.create({
 
   dropdownMenu: {
     position: "absolute",
-    top: 40, 
+    top: 40,
     left: 0,
     right: 0,
     borderWidth: 1,

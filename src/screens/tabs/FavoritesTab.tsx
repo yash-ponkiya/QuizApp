@@ -63,7 +63,6 @@ export default function FavoritesTab() {
         </View>
       </TouchableOpacity>
 
-      {/* REMOVE FAVORITE */}
       <TouchableOpacity
         style={styles.removeBtn}
         onPress={() => removeFavorite(item.id)}

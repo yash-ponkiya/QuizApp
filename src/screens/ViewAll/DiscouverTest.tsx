@@ -124,9 +124,11 @@ const styles = StyleSheet.create({
 
   overlay: {
     position: "absolute",
-    bottom: 6,
-    left: 8,
-    right: 8,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 6,
+    backgroundColor: "rgba(0,0,0,0.35)",
   },
 
   cardTitle: {
