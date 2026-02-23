@@ -23,7 +23,6 @@ export default function MyQuizzoTab() {
   const [collections, setCollections] = useState<any[]>([]);
   const [quizzes, setQuizzes] = useState<any[]>([]);
 
-  // ✅ MODAL STATE
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCollection, setSelectedCollection] = useState<any>(null);
   const [associatedQuizzes, setAssociatedQuizzes] = useState<any[]>([]);
@@ -63,7 +62,6 @@ export default function MyQuizzoTab() {
     }
   };
 
-  // ✅ OPEN COLLECTION MODAL
   const openCollection = async (collection: any) => {
     const data = await AsyncStorage.getItem("quizzes");
     const list = data ? JSON.parse(data) : [];
@@ -185,48 +183,67 @@ export default function MyQuizzoTab() {
         </View>
       )}
 
-      <Modal transparent visible={modalVisible} animationType="fade">
-        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-          <View style={styles.modalOverlay} />
-        </TouchableWithoutFeedback>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
+      {/* MODAL */}
+      {/* MODAL */}
+<Modal transparent visible={modalVisible} animationType="fade">
+  <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+    <View style={styles.modalOverlay}>
+      <TouchableWithoutFeedback>
+        <View style={styles.modalBox}>
+          <Text style={styles.modalTitle}>
+            {selectedCollection?.title}
+          </Text>
 
-            <Text style={styles.modalTitle}>
-              {selectedCollection?.title}
+          {associatedQuizzes.length > 0 ? (
+            <FlatList
+              data={associatedQuizzes}
+              keyExtractor={(item, i) => i.toString()}
+              style={{ maxHeight: 260 }}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.modalCard}
+                  activeOpacity={0.85}
+                  onPress={() =>
+                    navigation.navigate("QuizDetail", { quiz: item })
+                  }
+                >
+                  <Image
+                    source={{
+                      uri:
+                        item.image ||
+                        item.img ||
+                        "https://images.unsplash.com/photo-1522202176988-66273c2fd55f",
+                    }}
+                    style={styles.modalImage}
+                  />
+
+                  <View style={styles.modalOverlayText}>
+                    <Text style={styles.modalCardTitle}>
+                      {item.title}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+            />
+          ) : (
+            <Text style={{ color: "#777", marginBottom: 10 }}>
+              No quizzes in this collection
             </Text>
+          )}
 
-            {associatedQuizzes.length > 0 ? (
-              <FlatList
-                data={associatedQuizzes}
-                keyExtractor={(item, i) => i.toString()}
-                style={{ maxHeight: 220 }}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={styles.quizItem}
-                    onPress={() =>
-                      navigation.navigate("QuizDetail", { quiz: item })
-                    }
-                  >
-                    <Text style={styles.quizTitle}>{item.title}</Text>
-                  </TouchableOpacity>
-                )}
-              />
-            ) : (
-              <Text style={{ color: "#777", marginBottom: 10 }}>
-                No quizzes in this collection
-              </Text>
-            )}
-
-            <TouchableOpacity
-              style={styles.closeBtn}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={{ color: "#fff", fontWeight: "700" }}>Close</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={styles.closeBtn}
+            onPress={() => setModalVisible(false)}
+          >
+            <Text style={{ color: "#fff", fontWeight: "700" }}>
+              Close
+            </Text>
+          </TouchableOpacity>
         </View>
-      </Modal>
+      </TouchableWithoutFeedback>
+    </View>
+  </TouchableWithoutFeedback>
+</Modal>
     </View>
   );
 }
@@ -319,23 +336,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
-  quizItem: {
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderColor: "#EEE",
-  },
-  quizTitle: {
-    fontWeight: "600",
-    color: "#333",
-  },
-
   closeBtn: {
-    marginTop: 20,
+    marginTop: 14,
     backgroundColor: "#6C63FF",
-    padding: 14,
+    padding: 12,
     borderRadius: 12,
     alignItems: "center",
   },
+
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.45)",
@@ -345,11 +353,10 @@ const styles = StyleSheet.create({
 
   modalBox: {
     width: "82%",
-    height: "50%",
+    height: "30%",
     backgroundColor: "#fff",
     borderRadius: 16,
-    padding: 18,
-    elevation: 6,
+    padding: 14,
   },
 
   modalTitle: {
@@ -357,5 +364,34 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginBottom: 10,
     textAlign: "center",
+  },
+
+  modalCard: {
+    width: "100%",
+    height: 100,
+    borderRadius: 12,
+    overflow: "hidden",
+    marginBottom: 10,
+  },
+
+  modalImage: {
+    width: "100%",
+    height: "100%",
+  },
+
+  modalOverlayText: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    paddingVertical: 5,
+    paddingHorizontal: 8,
+  },
+
+  modalCardTitle: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 13,
   },
 });

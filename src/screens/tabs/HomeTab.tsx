@@ -4,12 +4,14 @@ import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
   Modal,
   FlatList,
   Pressable,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -29,6 +31,11 @@ export default function HomeTab() {
 
   const [notifVisible, setNotifVisible] = useState(false);
   const [invites, setInvites] = useState<any[]>([]);
+
+  // ✅ COLLECTION MODAL STATE
+  const [collectionModalVisible, setCollectionModalVisible] = useState(false);
+  const [selectedCollection, setSelectedCollection] = useState<any>(null);
+  const [collectionQuizzes, setCollectionQuizzes] = useState<any[]>([]);
 
   const getAvatar = (seed: string) =>
     `https://api.dicebear.com/7.x/avataaars/png?seed=${seed}`;
@@ -118,6 +125,20 @@ export default function HomeTab() {
         navigation.navigate("TestScreen", { quiz });
       }
     }
+  };
+
+  // ✅ OPEN COLLECTION
+  const openCollection = async (collection: any) => {
+    const data = await AsyncStorage.getItem("quizzes");
+    const all = data ? JSON.parse(data) : [];
+
+    const related = all.filter(
+      (q: any) => q.collectionId === collection.id
+    );
+
+    setSelectedCollection(collection);
+    setCollectionQuizzes(related);
+    setCollectionModalVisible(true);
   };
 
   return (
@@ -226,7 +247,6 @@ export default function HomeTab() {
                   />
                 ))}
               </ScrollView>
-
             </>
           )}
 
@@ -252,6 +272,7 @@ export default function HomeTab() {
                       "https://images.unsplash.com/photo-1522202176988-66273c2fd55f"
                     }
                     title={c.title}
+                    onPress={() => openCollection(c)}
                   />
                 ))}
               </ScrollView>
@@ -309,6 +330,70 @@ export default function HomeTab() {
             />
           </Pressable>
         </Pressable>
+      </Modal>
+
+      {/* COLLECTION MODAL */}
+      <Modal transparent visible={collectionModalVisible} animationType="fade">
+        <TouchableWithoutFeedback
+          onPress={() => setCollectionModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback>
+              <View style={styles.modalBox}>
+                <Text style={styles.modalTitle}>
+                  {selectedCollection?.title}
+                </Text>
+
+                <FlatList
+                  data={collectionQuizzes}
+                  keyExtractor={(item, i) => i.toString()}
+                  showsVerticalScrollIndicator={false}
+                  style={{ maxHeight: 260 }}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={styles.modalCard}
+                      activeOpacity={0.9}
+                      onPress={() => {
+                        setCollectionModalVisible(false);
+                        navigation.navigate("QuizDetail", { quiz: item });
+                      }}
+                    >
+                      <Image
+                        source={{
+                          uri:
+                            item.image ||
+                            item.img ||
+                            "https://images.unsplash.com/photo-1522202176988-66273c2fd55f",
+                        }}
+                        style={styles.modalImage}
+                      />
+
+                      <View style={styles.modalOverlayText}>
+                        <Text style={styles.modalCardTitle}>
+                          {item.title}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  )}
+                  ListEmptyComponent={
+                    <Text style={{ color: "#777", marginBottom: 10 }}>
+                      No quizzes in this collection
+                    </Text>
+                  }
+                />
+
+                <TouchableOpacity
+                  style={styles.closeBtn}
+                  onPress={() => setCollectionModalVisible(false)}
+                >
+                  <Text style={{ color: "#fff", fontWeight: "700" }}>
+                    Close
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </SafeAreaView>
   );
@@ -368,16 +453,16 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: "#00000055",
-    justifyContent: "flex-start",
-    paddingTop: 80,
-    paddingHorizontal: 20,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   modalBox: {
+    width: "82%",
+    maxHeight: 300,
     backgroundColor: "#fff",
     borderRadius: 14,
     padding: 16,
-    maxHeight: 300,
   },
 
   modalTitle: { fontWeight: "700", fontSize: 16, marginBottom: 10 },
@@ -409,4 +494,38 @@ const styles = StyleSheet.create({
   },
 
   btnText: { color: "#fff", fontSize: 12, fontWeight: "600" },
+
+  modalCard: {
+    width: "100%",
+    height: 100,
+    borderRadius: 12,
+    overflow: "hidden",
+    marginBottom: 10,
+  },
+
+  modalImage: { width: "100%", height: "100%" },
+
+  modalOverlayText: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    paddingVertical: 5,
+    paddingHorizontal: 8,
+  },
+
+  modalCardTitle: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 13,
+  },
+
+  closeBtn: {
+    marginTop: 12,
+    backgroundColor: "#6C4EFF",
+    padding: 10,
+    borderRadius: 10,
+    alignItems: "center",
+  },
 });
