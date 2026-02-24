@@ -254,72 +254,70 @@ export default function JoinScreen() {
         ))}
       </ScrollView>
 
-      <Modal visible={modalVisible} animationType="slide" transparent>
-        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-          <View style={styles.modalOverlay} />
-        </TouchableWithoutFeedback>
+      <Modal visible={modalVisible} animationType="fade" transparent>
+  <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+    <View style={styles.modalOverlay}>
+      <TouchableWithoutFeedback>
+        <View style={styles.modalBox}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>
+              Invite Friends To Play
+            </Text>
 
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                Invite Friends To Play
-              </Text>
-
-              <TouchableOpacity
-                onPress={() => setModalVisible(false)}
-              >
-                <Ionicons name="close" size={22} />
-              </TouchableOpacity>
-            </View>
-
-            {followedAuthors.length === 0 && (
-              <Text style={styles.noAuthors}>
-                You are not following anyone
-              </Text>
-            )}
-
-            <FlatList
-              data={followedAuthors}
-              keyExtractor={(item) => item.email}
-              renderItem={({ item }) => {
-                const invited = invitedMap[item.email]; // ✅ ADDED
-
-                return (
-                  <View style={styles.authorRow}>
-                    <View style={styles.authorLeft}>
-                      <Image
-                        source={{ uri: getAvatar(item.email) }}
-                        style={styles.avatar}
-                      />
-                      <Text style={styles.authorName}>
-                        {item.fullName}
-                      </Text>
-                    </View>
-
-                    <TouchableOpacity
-                      style={[
-                        styles.sendBtn,
-                        invited && styles.invitingBtn,
-                      ]}
-                      onPress={() => inviteAuthor(item)}
-                    >
-                      <Text
-                        style={[
-                          styles.sendText,
-                          invited && styles.invitingText,
-                        ]}
-                      >
-                        {invited ? "Inviting" : "Invite"}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                );
-              }}
-            />
+            <TouchableOpacity onPress={() => setModalVisible(false)}>
+              <Ionicons name="close" size={22} />
+            </TouchableOpacity>
           </View>
+
+          {followedAuthors.length === 0 && (
+            <Text style={styles.noAuthors}>
+              You are not following anyone
+            </Text>
+          )}
+
+          <FlatList
+            data={followedAuthors}
+            keyExtractor={(item) => item.email}
+            renderItem={({ item }) => {
+              const invited = invitedMap[item.email];
+
+              return (
+                <View style={styles.authorRow}>
+                  <View style={styles.authorLeft}>
+                    <Image
+                      source={{ uri: getAvatar(item.email) }}
+                      style={styles.avatar}
+                    />
+                    <Text style={styles.authorName}>
+                      {item.fullName}
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.sendBtn,
+                      invited && styles.invitingBtn,
+                    ]}
+                    onPress={() => inviteAuthor(item)}
+                  >
+                    <Text
+                      style={[
+                        styles.sendText,
+                        invited && styles.invitingText,
+                      ]}
+                    >
+                      {invited ? "Inviting" : "Invite"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              );
+            }}
+          />
         </View>
-      </Modal>
+      </TouchableWithoutFeedback>
+    </View>
+  </TouchableWithoutFeedback>
+</Modal>
     </SafeAreaView>
   );
 }
@@ -359,7 +357,7 @@ const styles = StyleSheet.create({
 
   modalOverlay: {
     flex: 1,
-    backgroundColor: "#00000055",
+    backgroundColor: "rgba(0,0,0,0.2)",
     justifyContent: "flex-end",
   },
 

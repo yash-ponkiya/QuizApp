@@ -280,7 +280,6 @@ const SignupScreen = ({ navigation }: any) => {
   );
 };
 
-/* reusable + styles unchanged */
 const LabelInput = ({ label, value, onChange, icon }: any) => (
   <View style={{ marginBottom: 20 }}>
     <Text style={styles.label}>{label}</Text>

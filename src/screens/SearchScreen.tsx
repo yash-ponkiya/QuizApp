@@ -17,12 +17,11 @@ import AppHeader from "./ViewAll/ViewAllHeader";
 
 export default function SearchScreen() {
   const navigation: any = useNavigation();
-  const route: any = useRoute(); // ✅ ADDED
+  const route: any = useRoute();
 
-  /* ✅ READ TAB FROM LIBRARY */
-  const initialTab = route.params?.tab || "Quiz"; // ✅ ADDED
+  const initialTab = route.params?.tab || "Quiz";
 
-  const [tab, setTab] = useState(initialTab); // ✅ UPDATED
+  const [tab, setTab] = useState(initialTab);
   const [query, setQuery] = useState("");
 
   const [quizzes, setQuizzes] = useState<any[]>([]);

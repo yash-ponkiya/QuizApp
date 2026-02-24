@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -7,11 +7,13 @@ import {
   ScrollView,
   Modal,
   Animated,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { styles } from "../../styles/styles";
 
 import AppHeader from "../ViewAll/ViewAllHeader";
 
@@ -25,9 +27,28 @@ export default function TestScreen() {
   );
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(0);
-  const [modalVisible, setModalVisible] = useState(false);
+
+  const [unattempted, setUnattempted] = useState(0);
+  const [wrong, setWrong] = useState(0);
+
+  const [resultVisible, setResultVisible] = useState(false);
+
+  const [startVisible, setStartVisible] = useState(true);
+  const [countdown, setCountdown] = useState(10);
 
   const scaleAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!startVisible) return;
+
+    if (countdown === 0) {
+      setStartVisible(false);
+      return;
+    }
+
+    const t = setTimeout(() => setCountdown(countdown - 1), 1000);
+    return () => clearTimeout(t);
+  }, [countdown, startVisible]);
 
   const animateIn = () => {
     scaleAnim.setValue(0);
@@ -39,13 +60,12 @@ export default function TestScreen() {
   };
 
   const selectOption = (qIndex: number, oIndex: number) => {
-    if (submitted) return;
+    if (submitted || startVisible) return;
     const updated = [...answers];
     updated[qIndex] = oIndex;
     setAnswers(updated);
   };
 
-  /* SAVE RESULT */
   const saveResult = async (sc: number) => {
     const existing = await AsyncStorage.getItem("quizResults");
     const results = existing ? JSON.parse(existing) : [];
@@ -64,60 +84,106 @@ export default function TestScreen() {
 
   const submitQuiz = () => {
     let sc = 0;
+    let un = 0;
+    let wr = 0;
+
     quiz.questions.forEach((q: any, i: number) => {
-      if (answers[i] === q.correctIndex) sc++;
+      if (answers[i] === -1) {
+        un++;
+      } else if (answers[i] === q.correctIndex) {
+        sc++;
+      } else {
+        wr++;
+      }
     });
 
     setScore(sc);
-    setSubmitted(true);
-    setModalVisible(true);
-    animateIn();
+    setUnattempted(un);
+    setWrong(wr);
 
-    saveResult(sc); // ✅ store result
+    setSubmitted(true);
+    setResultVisible(true);
+    animateIn();
+    saveResult(sc);
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.containert}>
       <AppHeader title={quiz.title} showBack />
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {quiz.questions.map((q: any, qi: number) => (
-          <View key={qi} style={styles.qCard}>
-            <Text style={styles.question}>
-              {qi + 1}. {q.question}
-            </Text>
+        {startVisible &&
+          Array.from({ length: 3 }).map((_, i) => (
+            <View key={i} style={styles.skelCard}>
+              <View style={styles.skelLineLarge} />
+              <View style={styles.skelLine} />
+              <View style={styles.skelLine} />
+              <View style={styles.skelLine} />
+            </View>
+          ))}
 
-            {q.options.map((opt: string, oi: number) => {
-              const selected = answers[qi] === oi;
-              const correct = q.correctIndex === oi;
+        {!startVisible &&
+          quiz.questions.map((q: any, qi: number) => {
+            const unattemptedQ = submitted && answers[qi] === -1;
 
-              return (
-                <TouchableOpacity
-                  key={oi}
-                  style={[
-                    styles.option,
-                    selected && styles.selected,
-                    submitted && correct && styles.correct,
-                    submitted && selected && !correct && styles.wrong,
-                  ]}
-                  onPress={() => selectOption(qi, oi)}
-                >
-                  <Text style={styles.optText}>{opt}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        ))}
+            return (
+              <View
+                key={qi}
+                style={[
+                  styles.qCard,
+                  unattemptedQ && styles.unattemptedQ,
+                ]}
+              >
+                <Text style={styles.question}>
+                  {qi + 1}. {q.question}
+                </Text>
 
-        {!submitted && (
+                {q.options.map((opt: string, oi: number) => {
+                  const selected = answers[qi] === oi;
+                  const correct = q.correctIndex === oi;
+
+                  return (
+                    <TouchableOpacity
+                      key={oi}
+                      style={[
+                        styles.option,
+                        selected && styles.selected,
+                        submitted && correct && styles.correct,
+                        submitted && selected && !correct && styles.wrong,
+                      ]}
+                      onPress={() => selectOption(qi, oi)}
+                    >
+                      <Text style={styles.optText}>{opt}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            );
+          })}
+
+        {!submitted && !startVisible && (
           <TouchableOpacity style={styles.submitBtn} onPress={submitQuiz}>
             <Text style={styles.submitText}>Submit Quiz</Text>
           </TouchableOpacity>
         )}
       </ScrollView>
 
+      {/* START MODAL */}
+      <Modal transparent visible={startVisible} animationType="fade">
+        <View style={styles.overlay}>
+          <View style={styles.startBox}>
+            <Ionicons name="play-circle" size={48} color="#6C4EFF" />
+            <Text style={styles.startTitle}>Get Ready</Text>
+            <Text style={styles.startCount}>{countdown}</Text>
+            <Text style={styles.startSub}>Quiz starts soon…</Text>
+          </View>
+        </View>
+      </Modal>
+
       {/* RESULT MODAL */}
-      <Modal transparent visible={modalVisible} animationType="fade">
+      <Modal transparent visible={resultVisible} animationType="fade">
+        <TouchableWithoutFeedback onPress={() => setResultVisible(false)}>
+
         <View style={styles.overlay}>
           <Animated.View
             style={[styles.modalBox, { transform: [{ scale: scaleAnim }] }]}
@@ -130,10 +196,16 @@ export default function TestScreen() {
               {score} / {quiz.questions.length}
             </Text>
 
+            <View style={styles.resultRow}>
+              <Text style={styles.correctText}>Correct: {score}</Text>
+              <Text style={styles.wrongText}>Wrong: {wrong}</Text>
+              <Text style={styles.unText}>Unattempted: {unattempted}</Text>
+            </View>
+
             <TouchableOpacity
               style={styles.doneBtn}
               onPress={() => {
-                setModalVisible(false);
+                setResultVisible(false);
                 navigation.goBack();
               }}
             >
@@ -141,79 +213,9 @@ export default function TestScreen() {
             </TouchableOpacity>
           </Animated.View>
         </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", padding: 20 },
-
-  qCard: {
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: "#EEE",
-    borderRadius: 12,
-    padding: 14,
-  },
-
-  question: { fontWeight: "700", marginBottom: 10 },
-
-  option: {
-    borderWidth: 1,
-    borderColor: "#EEE",
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 8,
-  },
-
-  selected: { borderColor: "#6C4EFF", backgroundColor: "#F4F2FF" },
-  correct: { borderColor: "#4CAF50", backgroundColor: "#E8F5E9" },
-  wrong: { borderColor: "#F44336", backgroundColor: "#FFEBEE" },
-
-  optText: { fontSize: 14 },
-
-  submitBtn: {
-    backgroundColor: "#6C4EFF",
-    padding: 16,
-    borderRadius: 28,
-    alignItems: "center",
-    marginBottom: 40,
-  },
-
-  submitText: { color: "#fff", fontWeight: "700" },
-
-  overlay: {
-    flex: 1,
-    backgroundColor: "#00000066",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  modalBox: {
-    width: 260,
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 24,
-    alignItems: "center",
-  },
-
-  modalTitle: { fontSize: 18, fontWeight: "700", marginTop: 10 },
-
-  scoreText: {
-    fontSize: 32,
-    fontWeight: "800",
-    color: "#6C4EFF",
-    marginVertical: 12,
-  },
-
-  doneBtn: {
-    backgroundColor: "#6C4EFF",
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    borderRadius: 20,
-    marginTop: 6,
-  },
-
-  doneText: { color: "#fff", fontWeight: "700" },
-});
