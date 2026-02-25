@@ -164,7 +164,7 @@ export default function ProfileScreen() {
           />
         }
       >
-        <AppHeader title="Profile" showBack />
+        <AppHeader title="Profile" showBack={false} />
 
         {!showDetails && userData && (
           <TouchableOpacity
@@ -223,7 +223,9 @@ export default function ProfileScreen() {
 
         {/* MY QUIZZES */}
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+          <TouchableOpacity onPress={() => navigation.navigate("DiscoverTest")}>
           <Text style={styles.sectionTitle}>My Quizzes</Text>
+          </TouchableOpacity>
           {quizzes.length > 0 && (
             <TouchableOpacity onPress={toggleQuizEdit}>
               <Ionicons
@@ -254,7 +256,9 @@ export default function ProfileScreen() {
 
         {/* MY COLLECTIONS */}
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+          <TouchableOpacity onPress={() => navigation.navigate("Collections")}>
           <Text style={styles.sectionTitle}>My Collections</Text>
+          </TouchableOpacity>
           {collections.length > 0 && (
             <TouchableOpacity onPress={toggleCollectionEdit}>
               <Ionicons
@@ -338,7 +342,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
-  /* GIVEN QUIZ CARD */
   givenCard: {
     borderWidth: 1,
     borderColor: "#EEE",

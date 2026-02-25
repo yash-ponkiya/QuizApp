@@ -1,5 +1,3 @@
-// ✅ ONLY ADDITIONS APPLIED — NOTHING REMOVED
-
 import React, { useState, useCallback } from "react";
 import {
   View,
@@ -8,9 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Modal,
   FlatList,
-  Pressable,
   TouchableWithoutFeedback,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -29,13 +25,9 @@ export default function HomeTab() {
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [inviteCount, setInviteCount] = useState(0);
 
-  const [notifVisible, setNotifVisible] = useState(false);
-  const [invites, setInvites] = useState<any[]>([]);
-
-  // ✅ COLLECTION MODAL STATE
-  const [collectionModalVisible, setCollectionModalVisible] = useState(false);
   const [selectedCollection, setSelectedCollection] = useState<any>(null);
   const [collectionQuizzes, setCollectionQuizzes] = useState<any[]>([]);
+  const [collectionModalVisible, setCollectionModalVisible] = useState(false);
 
   const getAvatar = (seed: string) =>
     `https://api.dicebear.com/7.x/avataaars/png?seed=${seed}`;
@@ -92,42 +84,13 @@ export default function HomeTab() {
           i.toEmail === currentUser.email && i.status === "pending"
       );
       setInviteCount(myInvites.length);
-      setInvites(myInvites);
     } else {
       setInviteCount(0);
-      setInvites([]);
     }
   };
 
   useFocusEffect(useCallback(() => { loadData(); }, []));
 
-  const updateInvite = async (invite: any, status: string) => {
-    const data = await AsyncStorage.getItem("quizInvites");
-    const all = data ? JSON.parse(data) : [];
-
-    const updated = all.map((i: any) =>
-      i.id === invite.id ? { ...i, status } : i
-    );
-
-    await AsyncStorage.setItem("quizInvites", JSON.stringify(updated));
-
-    loadData();
-
-    if (status === "accepted") {
-      const quizzesData = await AsyncStorage.getItem("quizzes");
-      const quizzes = quizzesData ? JSON.parse(quizzesData) : [];
-
-      const quiz = quizzes.find((q: any) => q.id === invite.quizId);
-
-      setNotifVisible(false);
-
-      if (quiz) {
-        navigation.navigate("TestScreen", { quiz });
-      }
-    }
-  };
-
-  // ✅ OPEN COLLECTION
   const openCollection = async (collection: any) => {
     const data = await AsyncStorage.getItem("quizzes");
     const all = data ? JSON.parse(data) : [];
@@ -159,7 +122,10 @@ export default function HomeTab() {
                 <Ionicons name="search" size={22} />
               </TouchableOpacity>
 
-              <TouchableOpacity onPress={() => setNotifVisible(true)}>
+              {/* ⭐ NAVIGATE TO NOTIFICATIONS SCREEN */}
+              <TouchableOpacity
+                onPress={() => navigation.navigate("Notifications")}
+              >
                 <View>
                   <Ionicons name="notifications-outline" size={22} />
                   {inviteCount > 0 && (
@@ -280,121 +246,6 @@ export default function HomeTab() {
           )}
         </View>
       </ScrollView>
-
-      {/* NOTIFICATION MODAL */}
-      <Modal transparent visible={notifVisible} animationType="fade">
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setNotifVisible(false)}
-        >
-          <Pressable style={styles.modalBox}>
-            <Text style={styles.modalTitle}>Invitations</Text>
-
-            <FlatList
-              data={invites}
-              keyExtractor={(item) => item.id}
-              showsVerticalScrollIndicator={false}
-              style={{ maxHeight: 350 }}
-              renderItem={({ item }) => (
-                <View style={styles.inviteRow}>
-                  <Text style={styles.inviteText}>
-                    <Text style={styles.bold}>
-                      {item.fromName}
-                    </Text>{" "}
-                    invited you to{" "}
-                    <Text style={styles.bold}>
-                      {item.quizTitle}
-                    </Text>
-                  </Text>
-
-                  <View style={styles.actions}>
-                    <TouchableOpacity
-                      style={styles.accept}
-                      onPress={() => updateInvite(item, "accepted")}
-                    >
-                      <Text style={styles.btnText}>Accept</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={styles.reject}
-                      onPress={() => updateInvite(item, "rejected")}
-                    >
-                      <Text style={styles.btnText}>Reject</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
-              ListEmptyComponent={
-                <Text style={styles.empty}>No invites</Text>
-              }
-            />
-          </Pressable>
-        </Pressable>
-      </Modal>
-
-      {/* COLLECTION MODAL */}
-      <Modal transparent visible={collectionModalVisible} animationType="fade">
-        <TouchableWithoutFeedback
-          onPress={() => setCollectionModalVisible(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <TouchableWithoutFeedback>
-              <View style={styles.modalBox}>
-                <Text style={styles.modalTitle}>
-                  {selectedCollection?.title}
-                </Text>
-
-                <FlatList
-                  data={collectionQuizzes}
-                  keyExtractor={(item, i) => i.toString()}
-                  showsVerticalScrollIndicator={false}
-                  style={{ maxHeight: 260 }}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      style={styles.modalCard}
-                      activeOpacity={0.9}
-                      onPress={() => {
-                        setCollectionModalVisible(false);
-                        navigation.navigate("QuizDetail", { quiz: item });
-                      }}
-                    >
-                      <Image
-                        source={{
-                          uri:
-                            item.image ||
-                            item.img ||
-                            "https://images.unsplash.com/photo-1522202176988-66273c2fd55f",
-                        }}
-                        style={styles.modalImage}
-                      />
-
-                      <View style={styles.modalOverlayText}>
-                        <Text style={styles.modalCardTitle}>
-                          {item.title}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  )}
-                  ListEmptyComponent={
-                    <Text style={{ color: "#777", marginBottom: 10 }}>
-                      No quizzes in this collection
-                    </Text>
-                  }
-                />
-
-                <TouchableOpacity
-                  style={styles.closeBtn}
-                  onPress={() => setCollectionModalVisible(false)}
-                >
-                  <Text style={{ color: "#fff", fontWeight: "700" }}>
-                    Close
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -449,83 +300,4 @@ const styles = StyleSheet.create({
 
   sectionTitle: { fontSize: 18, fontWeight: "700" },
   viewAll: { color: "#6C4EFF", fontWeight: "600" },
-
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  modalBox: {
-    width: "82%",
-    maxHeight: 300,
-    backgroundColor: "#fff",
-    borderRadius: 14,
-    padding: 16,
-  },
-
-  modalTitle: { fontWeight: "700", fontSize: 16, marginBottom: 10 },
-  empty: { textAlign: "center", marginTop: 20, color: "#999" },
-
-  inviteRow: {
-    borderBottomWidth: 1,
-    borderColor: "#EEE",
-    paddingVertical: 10,
-  },
-
-  inviteText: { fontSize: 13 },
-  bold: { fontWeight: "700", color: "#6C4EFF" },
-
-  actions: { flexDirection: "row", gap: 10, marginTop: 6 },
-
-  accept: {
-    backgroundColor: "#4CAF50",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-
-  reject: {
-    backgroundColor: "#F44336",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-
-  btnText: { color: "#fff", fontSize: 12, fontWeight: "600" },
-
-  modalCard: {
-    width: "100%",
-    height: 100,
-    borderRadius: 12,
-    overflow: "hidden",
-    marginBottom: 10,
-  },
-
-  modalImage: { width: "100%", height: "100%" },
-
-  modalOverlayText: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    paddingVertical: 5,
-    paddingHorizontal: 8,
-  },
-
-  modalCardTitle: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 13,
-  },
-
-  closeBtn: {
-    marginTop: 12,
-    backgroundColor: "#6C4EFF",
-    padding: 10,
-    borderRadius: 10,
-    alignItems: "center",
-  },
 });
