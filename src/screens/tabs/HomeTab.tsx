@@ -2,12 +2,9 @@ import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
-  Image,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  FlatList,
-  TouchableWithoutFeedback,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -24,10 +21,6 @@ export default function HomeTab() {
   const [collections, setCollections] = useState<any[]>([]);
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [inviteCount, setInviteCount] = useState(0);
-
-  const [selectedCollection, setSelectedCollection] = useState<any>(null);
-  const [collectionQuizzes, setCollectionQuizzes] = useState<any[]>([]);
-  const [collectionModalVisible, setCollectionModalVisible] = useState(false);
 
   const getAvatar = (seed: string) =>
     `https://api.dicebear.com/7.x/avataaars/png?seed=${seed}`;
@@ -48,15 +41,18 @@ export default function HomeTab() {
       ? JSON.parse(currentUserData)
       : null;
 
+    // AUTHORS
     if (users.length && followed.length) {
       setAuthors(users.filter((u: any) => followed.includes(u.email)));
     } else setAuthors([]);
 
+    // COLLECTIONS
     if (collectionsData) {
       const all = JSON.parse(collectionsData);
       setCollections(all.filter((c: any) => c.visibleTo === "Public"));
     } else setCollections([]);
 
+    // QUIZZES
     if (quizzesList.length) {
       const enriched = quizzesList.map((q: any) => {
         const user = users.find(
@@ -78,6 +74,7 @@ export default function HomeTab() {
       setQuizzes(enriched);
     } else setQuizzes([]);
 
+    // INVITES COUNT
     if (currentUser) {
       const myInvites = invitesAll.filter(
         (i: any) =>
@@ -89,19 +86,15 @@ export default function HomeTab() {
     }
   };
 
-  useFocusEffect(useCallback(() => { loadData(); }, []));
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [])
+  );
 
-  const openCollection = async (collection: any) => {
-    const data = await AsyncStorage.getItem("quizzes");
-    const all = data ? JSON.parse(data) : [];
-
-    const related = all.filter(
-      (q: any) => q.collectionId === collection.id
-    );
-
-    setSelectedCollection(collection);
-    setCollectionQuizzes(related);
-    setCollectionModalVisible(true);
+  // ⭐ NAVIGATE TO COLLECTION DETAIL
+  const openCollection = (collection: any) => {
+    navigation.navigate("CollectionDetail", { collection });
   };
 
   return (
@@ -122,7 +115,6 @@ export default function HomeTab() {
                 <Ionicons name="search" size={22} />
               </TouchableOpacity>
 
-              {/* ⭐ NAVIGATE TO NOTIFICATIONS SCREEN */}
               <TouchableOpacity
                 onPress={() => navigation.navigate("Notifications")}
               >
@@ -181,7 +173,9 @@ export default function HomeTab() {
                     title={q.title}
                     subtitle={q.authorName}
                     avatar={`https://i.pravatar.cc/100?u=${q.authorName}`}
-                    onPress={() => navigation.navigate("QuizDetail", { quiz: q })}
+                    onPress={() =>
+                      navigation.navigate("QuizDetail", { quiz: q })
+                    }
                   />
                 ))}
               </ScrollView>

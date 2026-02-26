@@ -21,6 +21,7 @@ import SearchScreen from "./src/screens/SearchScreen";
 import GivenQuizzesScreen from "./src/screens/GivenQuizzesScreen";
 import AuthorProfileScreen from "./src/components/AuthorProfileScreen";
 import QuizDetail from "./src/components/QuizDetail";
+import CollectionDetailScreen from "./src/screens/CollectionDetailScreen";
 import NotificationsScreen from "./src/screens/NotificationsScreen";
 import Toast from "react-native-toast-message";
 
@@ -83,6 +84,7 @@ export default function App() {
         <Stack.Screen name="GivenQuizzes" component={GivenQuizzesScreen} />
         <Stack.Screen name="AuthorProfile" component={AuthorProfileScreen} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
+        <Stack.Screen name="CollectionDetail" component={CollectionDetailScreen} />
         
         <Stack.Screen
           name="Collections"

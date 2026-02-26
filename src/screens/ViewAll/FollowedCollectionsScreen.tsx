@@ -19,7 +19,7 @@ export default function FollowedCollectionsScreen() {
 
   const [collections, setCollections] = useState<any[]>([]);
 
-  // ✅ ADDITIONS — COLLECTION MODAL
+  // ✅ KEEPING MODAL STATES (not removed)
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCollection, setSelectedCollection] = useState<any>(null);
   const [collectionQuizzes, setCollectionQuizzes] = useState<any[]>([]);
@@ -34,25 +34,19 @@ export default function FollowedCollectionsScreen() {
     else setCollections([]);
   };
 
-  // ✅ ADDITION — OPEN COLLECTION
+  // ✅ KEEP FUNCTION (not removed)
   const openCollection = async (collection: any) => {
-    const data = await AsyncStorage.getItem("quizzes");
-    const all = data ? JSON.parse(data) : [];
-
-    const related = all.filter(
-      (q: any) => q.collectionId === collection.id
-    );
-
     setSelectedCollection(collection);
-    setCollectionQuizzes(related);
-    setModalVisible(true);
+
+    // ⭐ NEW: navigate instead of modal
+    navigation.navigate("CollectionDetail", { collection });
   };
 
   const renderCard = ({ item }: any) => (
     <TouchableOpacity
       style={styles.card}
       activeOpacity={0.85}
-      onPress={() => openCollection(item)}   // ✅ ADDITION
+      onPress={() => openCollection(item)} // ⭐ NAVIGATE
     >
       <Image
         source={{
@@ -89,7 +83,7 @@ export default function FollowedCollectionsScreen() {
         />
       )}
 
-      {/* ✅ COLLECTION MODAL */}
+      {/* ✅ MODAL KEPT (unused but not removed as requested) */}
       <Modal transparent visible={modalVisible} animationType="fade">
         <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
           <View style={styles.modalOverlay}>
@@ -199,7 +193,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
-  // ✅ MODAL STYLES (same as other screens)
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.45)",

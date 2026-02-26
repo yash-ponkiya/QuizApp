@@ -36,7 +36,6 @@ export default function ProfileScreen() {
   const [selectedResult, setSelectedResult] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  // ✅ ADDED: pending delete buffers
   const [pendingDeleteQuizzes, setPendingDeleteQuizzes] = useState<string[]>([]);
   const [pendingDeleteCollections, setPendingDeleteCollections] = useState<string[]>([]);
 
@@ -76,7 +75,6 @@ export default function ProfileScreen() {
     setQuizResults(data ? JSON.parse(data).reverse() : []);
   };
 
-  // ✅ HARD DELETE (final)
   const deleteQuiz = async (ids: string[]) => {
     const updated = quizzes.filter((q) => !ids.includes(q.id));
     setQuizzes(updated);
@@ -147,7 +145,6 @@ export default function ProfileScreen() {
     );
   }
 
-  // ✅ filtered lists (hide soft-deleted)
   const visibleQuizzes = quizzes.filter((q) => !pendingDeleteQuizzes.includes(q.id));
   const visibleCollections = collections.filter((c) => !pendingDeleteCollections.includes(c.id));
 
@@ -167,10 +164,7 @@ export default function ProfileScreen() {
         <AppHeader title="Profile" showBack={false} />
 
         {!showDetails && userData && (
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => setShowDetails(true)}
-          >
+          <TouchableOpacity style={styles.card} onPress={() => setShowDetails(true)}>
             <Text style={styles.name}>{userData.fullName}</Text>
             <Text style={styles.email}>{userData.email}</Text>
 
@@ -186,10 +180,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         )}
 
-        <TouchableOpacity
-          style={styles.givenCard}
-          onPress={() => navigation.navigate("GivenQuizzes")}
-        >
+        <TouchableOpacity style={styles.givenCard} onPress={() => navigation.navigate("GivenQuizzes")}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Ionicons name="trophy-outline" size={20} color="#6C4EFF" />
             <Text style={styles.givenTitle}>Given Quizzes</Text>
@@ -201,30 +192,10 @@ export default function ProfileScreen() {
           </View>
         </TouchableOpacity>
 
-        {showDetails && userData && (
-          <>
-            <Text style={styles.subtitle}>Full profile information</Text>
-
-            <InfoRow label="Account Type" value={userData.accountType} />
-            <InfoRow label="Workplace" value={userData.workplace} />
-            <InfoRow label="Full Name" value={userData.fullName} />
-            <InfoRow label="Date of Birth" value={userData.dob} />
-            <InfoRow label="Phone" value={userData.phone} />
-            <InfoRow label="Country" value={userData.country} />
-            <InfoRow label="Age" value={userData.age} />
-            <InfoRow label="Username" value={userData.username} />
-            <InfoRow label="Email" value={userData.email} />
-
-            <TouchableOpacity onPress={() => setShowDetails(false)}>
-              <Text style={styles.back}>← Back to Profile</Text>
-            </TouchableOpacity>
-          </>
-        )}
-
         {/* MY QUIZZES */}
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
           <TouchableOpacity onPress={() => navigation.navigate("DiscoverTest")}>
-          <Text style={styles.sectionTitle}>My Quizzes</Text>
+            <Text style={styles.sectionTitle}>My Quizzes</Text>
           </TouchableOpacity>
           {quizzes.length > 0 && (
             <TouchableOpacity onPress={toggleQuizEdit}>
@@ -242,7 +213,12 @@ export default function ProfileScreen() {
           <Text style={styles.empty}>No quizzes</Text>
         ) : (
           visibleQuizzes.map((q) => (
-            <View key={q.id} style={styles.itemRow}>
+            <TouchableOpacity
+              key={q.id}
+              style={styles.itemRow}
+              activeOpacity={0.8}
+              onPress={() => !editQuizMode && navigation.navigate("QuizDetail", { quiz: q })}
+            >
               <Text style={styles.itemTitle}>{q.title}</Text>
 
               {editQuizMode && (
@@ -250,14 +226,14 @@ export default function ProfileScreen() {
                   <Ionicons name="trash" size={18} color="#FF3B30" style={{ marginRight: 7 }} />
                 </TouchableOpacity>
               )}
-            </View>
+            </TouchableOpacity>
           ))
         )}
 
         {/* MY COLLECTIONS */}
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
           <TouchableOpacity onPress={() => navigation.navigate("Collections")}>
-          <Text style={styles.sectionTitle}>My Collections</Text>
+            <Text style={styles.sectionTitle}>My Collections</Text>
           </TouchableOpacity>
           {collections.length > 0 && (
             <TouchableOpacity onPress={toggleCollectionEdit}>
@@ -275,7 +251,12 @@ export default function ProfileScreen() {
           <Text style={styles.empty}>No collections</Text>
         ) : (
           visibleCollections.map((c) => (
-            <View key={c.id} style={styles.itemRow}>
+            <TouchableOpacity
+              key={c.id}
+              style={styles.itemRow}
+              activeOpacity={0.8}
+              onPress={() => !editCollectionMode && navigation.navigate("CollectionDetail", { collection: c })}
+            >
               <Text style={styles.itemTitle}>{c.title}</Text>
 
               {editCollectionMode && (
@@ -283,7 +264,7 @@ export default function ProfileScreen() {
                   <Ionicons name="trash" size={18} color="#FF3B30" style={{ marginRight: 7 }} />
                 </TouchableOpacity>
               )}
-            </View>
+            </TouchableOpacity>
           ))
         )}
 
@@ -294,7 +275,6 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </ScrollView>
 
-      {/* RESULT MODAL (unchanged) */}
       <Modal transparent visible={modalVisible} animationType="fade">
         <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
           <View style={styles.modalOverlay}>
