@@ -16,7 +16,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import AppHeader from "../ViewAll/ViewAllHeader";
+import HomeHeader from "../../components/QuizzoCollectionsHeader";
 
 export default function ProfileScreen() {
   const navigation: any = useNavigation();
@@ -161,7 +161,7 @@ export default function ProfileScreen() {
           />
         }
       >
-        <AppHeader title="Profile" showBack={false} />
+        <HomeHeader title="My Profile" showSearch={false} showNotifications={false} />
 
         {!showDetails && userData && (
           <TouchableOpacity style={styles.card} onPress={() => setShowDetails(true)}>
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
   editbutton:{
     marginRight: 4, fontWeight: "bold",marginBottom: -6
   },
-  container: { flex: 1, padding: 20, backgroundColor: "#fff" },
+  container: { flex: 1, backgroundColor: "#fff",paddingHorizontal: 20, paddingTop: 10 },
   loaderContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
 
   title: { fontSize: 22, fontWeight: "700", marginBottom: 20 },

@@ -15,7 +15,7 @@ import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
-import AppHeader from "../ViewAll/ViewAllHeader";
+import HomeHeader from "../../components/QuizzoCollectionsHeader";
 
 export default function CreateScreen() {
   const navigation: any = useNavigation();
@@ -172,7 +172,7 @@ export default function CreateScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <AppHeader title="Create Quiz" showBack />
+      <HomeHeader title="Create Quiz" showNotifications={false} showSearch={false}/>
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* ⭐ CREATE NEW QUIZ BUTTON */}
@@ -332,7 +332,7 @@ export default function CreateScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", padding: 20 },
+  container: { flex: 1, backgroundColor: "#fff", paddingHorizontal: 20, paddingTop: 10 },
 
   newQuizBtn: {
     flexDirection: "row",

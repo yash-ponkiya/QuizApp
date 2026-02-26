@@ -7,12 +7,12 @@ import {
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import UniversalCard from "../../components/UniversalCard";
+import HomeHeader from "../../components/QuizzoCollectionsHeader";
 
 export default function HomeTab() {
   const navigation: any = useNavigation();
@@ -41,18 +41,15 @@ export default function HomeTab() {
       ? JSON.parse(currentUserData)
       : null;
 
-    // AUTHORS
     if (users.length && followed.length) {
       setAuthors(users.filter((u: any) => followed.includes(u.email)));
     } else setAuthors([]);
 
-    // COLLECTIONS
     if (collectionsData) {
       const all = JSON.parse(collectionsData);
       setCollections(all.filter((c: any) => c.visibleTo === "Public"));
     } else setCollections([]);
 
-    // QUIZZES
     if (quizzesList.length) {
       const enriched = quizzesList.map((q: any) => {
         const user = users.find(
@@ -74,7 +71,6 @@ export default function HomeTab() {
       setQuizzes(enriched);
     } else setQuizzes([]);
 
-    // INVITES COUNT
     if (currentUser) {
       const myInvites = invitesAll.filter(
         (i: any) =>
@@ -92,7 +88,6 @@ export default function HomeTab() {
     }, [])
   );
 
-  // ⭐ NAVIGATE TO COLLECTION DETAIL
   const openCollection = (collection: any) => {
     navigation.navigate("CollectionDetail", { collection });
   };
@@ -102,35 +97,13 @@ export default function HomeTab() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
           {/* HEADER */}
-          <View style={styles.header}>
-            <View style={styles.logoRow}>
-              <Ionicons name="help-circle" size={26} color="#6C4EFF" />
-              <Text style={styles.logoText}>Quizzo</Text>
-            </View>
-
-            <View style={styles.headerIcons}>
-              <TouchableOpacity
-                onPress={() => navigation.navigate("Search")}
-              >
-                <Ionicons name="search" size={22} />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => navigation.navigate("Notifications")}
-              >
-                <View>
-                  <Ionicons name="notifications-outline" size={22} />
-                  {inviteCount > 0 && (
-                    <View style={styles.badge}>
-                      <Text style={styles.badgeText}>
-                        {inviteCount}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              </TouchableOpacity>
-            </View>
-          </View>
+          <HomeHeader
+            inviteCount={inviteCount}
+            onSearchPress={() => navigation.navigate("Search")}
+            onNotificationsPress={() =>
+              navigation.navigate("Notifications")
+            }
+          />
 
           {/* HERO */}
           <LinearGradient
@@ -247,31 +220,6 @@ export default function HomeTab() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#fff" },
   container: { paddingHorizontal: 20, paddingTop: 10 },
-
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 18,
-  },
-
-  logoRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  logoText: { fontSize: 20, fontWeight: "700" },
-  headerIcons: { flexDirection: "row", gap: 16 },
-
-  badge: {
-    position: "absolute",
-    top: -6,
-    right: -6,
-    backgroundColor: "#FF3B30",
-    borderRadius: 10,
-    minWidth: 16,
-    height: 16,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  badgeText: { color: "#fff", fontSize: 10, fontWeight: "700" },
 
   hero: { borderRadius: 18, padding: 20, height: 150, marginBottom: 20 },
   heroText: { color: "#fff", fontSize: 20, fontWeight: "600" },

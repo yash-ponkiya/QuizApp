@@ -6,6 +6,7 @@ import {
   StyleSheet,
 } from "react-native";
 
+
 type Props = {
   tabs: string[];
   activeTab: string;

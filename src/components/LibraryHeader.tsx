@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import HomeHeader from "./QuizzoCollectionsHeader";
 
 type Props = {
   onSearch?: () => void;
@@ -8,36 +9,18 @@ type Props = {
 
 const LibraryHeader = ({ onSearch }: Props) => {
   return (
-    <View style={styles.header}>
-      <View style={styles.left}>
-        <Ionicons name="help-circle" size={22} color="#6C63FF" />
-        <Text style={styles.title}>Library</Text>
-      </View>
+    <View style={styles.container}>
 
-      <TouchableOpacity onPress={onSearch}>
-        <Ionicons name="search-outline" size={22} color="#333" />
-      </TouchableOpacity>
-    </View>
+      <HomeHeader title="Library" showNotifications={false} 
+        showSearch={true} onSearchPress={onSearch}
+      />
+</View>
   );
 };
 
 export default LibraryHeader;
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  left: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#222",
-  },
+  container: { paddingHorizontal: 4, paddingTop: 10 },
+  
 });

@@ -17,7 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import AppHeader from "../ViewAll/ViewAllHeader";
+import HomeHeader from "../../components/QuizzoCollectionsHeader";
 
 export default function JoinScreen() {
   const navigation: any = useNavigation();
@@ -178,7 +178,7 @@ export default function JoinScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <AppHeader title="Join Quiz" showBack />
+      <HomeHeader title="Join Quizzes" showNotifications={false} showSearch={false}/>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -323,7 +323,7 @@ export default function JoinScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", padding: 20 },
+  container: { flex: 1, backgroundColor: "#fff", paddingHorizontal: 20, paddingTop: 10 },
   empty: { textAlign: "center", marginTop: 40, color: "#999" },
 
   card: {
