@@ -13,6 +13,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import UniversalCard from "../../components/UniversalCard";
 import HomeHeader from "../../components/QuizzoCollectionsHeader";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function HomeTab() {
   const navigation: any = useNavigation();
@@ -130,7 +131,7 @@ export default function HomeTab() {
                 <TouchableOpacity
                   onPress={() => navigation.navigate("DiscoverTest")}
                 >
-                  <Text style={styles.viewAll}>View all →</Text>
+                  <Text style={styles.viewAll}>View all <Ionicons name="chevron-forward-outline" style={styles.iconStyle} /></Text>
                 </TouchableOpacity>
               </View>
 
@@ -163,7 +164,7 @@ export default function HomeTab() {
                 <TouchableOpacity
                   onPress={() => navigation.navigate("FollowedAuthors")}
                 >
-                  <Text style={styles.viewAll}>View all →</Text>
+                  <Text style={styles.viewAll}>View all <Ionicons name="chevron-forward-outline" style={styles.iconStyle} /></Text>
                 </TouchableOpacity>
               </View>
 
@@ -191,7 +192,7 @@ export default function HomeTab() {
                 <TouchableOpacity
                   onPress={() => navigation.navigate("Collections")}
                 >
-                  <Text style={styles.viewAll}>View all →</Text>
+                  <Text style={styles.viewAll}>View all <Ionicons name="chevron-forward-outline" style={styles.iconStyle} /></Text>
                 </TouchableOpacity>
               </View>
 
@@ -242,4 +243,5 @@ const styles = StyleSheet.create({
 
   sectionTitle: { fontSize: 18, fontWeight: "700" },
   viewAll: { color: "#6C4EFF", fontWeight: "600" },
+  iconStyle: { fontSize: 14, color: "#6C4EFF" },
 });

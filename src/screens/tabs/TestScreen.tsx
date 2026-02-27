@@ -8,13 +8,13 @@ import {
   Modal,
   Animated,
   TouchableWithoutFeedback,
+  Image, // ✅ added import
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { styles } from "../../styles/styles";
-
 import AppHeader from "../ViewAll/ViewAllHeader";
 
 export default function TestScreen() {
@@ -22,21 +22,28 @@ export default function TestScreen() {
   const navigation: any = useNavigation();
   const { quiz } = route.params;
 
+  const hasTimer = quiz.timeMode === "limited";
+
   const [answers, setAnswers] = useState<number[]>(
     Array(quiz.questions.length).fill(-1)
   );
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(0);
-
   const [unattempted, setUnattempted] = useState(0);
   const [wrong, setWrong] = useState(0);
-
   const [resultVisible, setResultVisible] = useState(false);
 
   const [startVisible, setStartVisible] = useState(true);
   const [countdown, setCountdown] = useState(10);
 
+  const [timeLeft, setTimeLeft] = useState(
+    hasTimer ? (quiz.timeLimit || 1) * 60 : 0
+  );
+
   const scaleAnim = useRef(new Animated.Value(0)).current;
+
+  const isLastMinute = hasTimer && timeLeft <= 60;
+  const isLast10Sec = hasTimer && timeLeft <= 10;
 
   useEffect(() => {
     if (!startVisible) return;
@@ -49,6 +56,22 @@ export default function TestScreen() {
     const t = setTimeout(() => setCountdown(countdown - 1), 1000);
     return () => clearTimeout(t);
   }, [countdown, startVisible]);
+
+  useEffect(() => {
+    if (!hasTimer) return;
+    if (startVisible || submitted) return;
+
+    if (timeLeft === 0) {
+      submitQuiz(true);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft, startVisible, submitted, hasTimer]);
 
   const animateIn = () => {
     scaleAnim.setValue(0);
@@ -82,19 +105,17 @@ export default function TestScreen() {
     await AsyncStorage.setItem("quizResults", JSON.stringify(results));
   };
 
-  const submitQuiz = () => {
+  const submitQuiz = (auto = false) => {
+    if (submitted) return;
+
     let sc = 0;
     let un = 0;
     let wr = 0;
 
     quiz.questions.forEach((q: any, i: number) => {
-      if (answers[i] === -1) {
-        un++;
-      } else if (answers[i] === q.correctIndex) {
-        sc++;
-      } else {
-        wr++;
-      }
+      if (answers[i] === -1) un++;
+      else if (answers[i] === q.correctIndex) sc++;
+      else wr++;
     });
 
     setScore(sc);
@@ -107,9 +128,28 @@ export default function TestScreen() {
     saveResult(sc);
   };
 
+  const formatTime = () => {
+    const m = Math.floor(timeLeft / 60);
+    const s = timeLeft % 60;
+    return `${m}:${s < 10 ? "0" : ""}${s}`;
+  };
+
   return (
     <SafeAreaView style={styles.containert}>
       <AppHeader title={quiz.title} showBack />
+
+      {hasTimer && !startVisible && !submitted && (
+        <View
+          style={[
+            local.timerBar,
+            isLastMinute && local.timerBarRed,
+            isLast10Sec && local.timerBarDarkRed,
+          ]}
+        >
+          <Ionicons name="time" size={16} color="#fff" />
+          <Text style={local.timerText}>{formatTime()}</Text>
+        </View>
+      )}
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {startVisible &&
@@ -138,6 +178,14 @@ export default function TestScreen() {
                   {qi + 1}. {q.question}
                 </Text>
 
+                {/* ✅ IMAGE QUESTION FEATURE — SHOW QUESTION IMAGE */}
+                {q.image && (
+                  <Image
+                    source={{ uri: q.image }}
+                    style={local.qImage}
+                  />
+                )}
+
                 {q.options.map((opt: string, oi: number) => {
                   const selected = answers[qi] === oi;
                   const correct = q.correctIndex === oi;
@@ -160,15 +208,17 @@ export default function TestScreen() {
               </View>
             );
           })}
-
-        {!submitted && !startVisible && (
-          <TouchableOpacity style={styles.submitBtn} onPress={submitQuiz}>
-            <Text style={styles.submitText}>Submit Quiz</Text>
-          </TouchableOpacity>
-        )}
       </ScrollView>
 
-      {/* START MODAL */}
+      {!submitted && !startVisible && (
+        <TouchableOpacity
+          style={styles.submitBtn}
+          onPress={() => submitQuiz(false)}
+        >
+          <Text style={styles.submitText}>Submit Quiz</Text>
+        </TouchableOpacity>
+      )}
+
       <Modal transparent visible={startVisible} animationType="fade">
         <View style={styles.overlay}>
           <View style={styles.startBox}>
@@ -180,42 +230,71 @@ export default function TestScreen() {
         </View>
       </Modal>
 
-      {/* RESULT MODAL */}
       <Modal transparent visible={resultVisible} animationType="fade">
         <TouchableWithoutFeedback onPress={() => setResultVisible(false)}>
-
-        <View style={styles.overlay}>
-          <Animated.View
-            style={[styles.modalBox, { transform: [{ scale: scaleAnim }] }]}
-          >
-            <Ionicons name="trophy" size={48} color="#FFD700" />
-
-            <Text style={styles.modalTitle}>Quiz Completed</Text>
-
-            <Text style={styles.scoreText}>
-              {score} / {quiz.questions.length}
-            </Text>
-
-            <View style={styles.resultRow}>
-              <Text style={styles.correctText}>Correct: {score}</Text>
-              <Text style={styles.wrongText}>Wrong: {wrong}</Text>
-              <Text style={styles.unText}>Unattempted: {unattempted}</Text>
-            </View>
-
-            <TouchableOpacity
-              style={styles.doneBtn}
-              onPress={() => {
-                setResultVisible(false);
-                navigation.goBack();
-              }}
+          <View style={styles.overlay}>
+            <Animated.View
+              style={[styles.modalBox, { transform: [{ scale: scaleAnim }] }]}
             >
-              <Text style={styles.doneText}>Done</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        </View>
+              <Ionicons name="trophy" size={48} color="#FFD700" />
+              <Text style={styles.modalTitle}>Quiz Completed</Text>
+
+              <Text style={styles.scoreText}>
+                {score} / {quiz.questions.length}
+              </Text>
+
+              <View style={styles.resultRow}>
+                <Text style={styles.correctText}>Correct: {score}</Text>
+                <Text style={styles.wrongText}>Wrong: {wrong}</Text>
+                <Text style={styles.unText}>Unattempted: {unattempted}</Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.doneBtn}
+                onPress={() => {
+                  setResultVisible(false);
+                  navigation.goBack();
+                }}
+              >
+                <Text style={styles.doneText}>Done</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
         </TouchableWithoutFeedback>
       </Modal>
     </SafeAreaView>
   );
 }
 
+const local = StyleSheet.create({
+  timerBar: {
+    backgroundColor: "#6C4EFF",
+    paddingVertical: 6,
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 6,
+    marginBottom: 10,
+    borderRadius: 20,
+  },
+  timerBarRed: {
+    backgroundColor: "#FF3B30",
+  },
+  timerBarDarkRed: {
+    backgroundColor: "#C62828",
+  },
+  timerText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 14,
+  },
+
+  // ✅ IMAGE STYLE
+  qImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 10,
+    marginTop: 6,
+    marginBottom: 6,
+  },
+});

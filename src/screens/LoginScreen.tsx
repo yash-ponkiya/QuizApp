@@ -5,7 +5,6 @@ import {
   View,
   TextInput,
   TouchableOpacity,
-  Alert,
   Switch,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,21 +21,33 @@ const LoginScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
 
+  // ✅ error states
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
   const handleLogin = async () => {
+    let valid = true;
+
+    // reset errors
+    setEmailError("");
+    setPasswordError("");
+
+    // email validation
     if (!email.trim()) {
-      Alert.alert("Error", "Email is required");
-      return;
+      setEmailError("Email is required");
+      valid = false;
+    } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+      setEmailError("Enter valid email");
+      valid = false;
     }
 
-    if (!/^\S+@\S+\.\S+$/.test(email)) {
-      Alert.alert("Error", "Enter valid email");
-      return;
-    }
-
+    // password validation
     if (!password.trim()) {
-      Alert.alert("Error", "Password is required");
-      return;
+      setPasswordError("Password is required");
+      valid = false;
     }
+
+    if (!valid) return;
 
     const storedUsers = await AsyncStorage.getItem("users");
     const users = storedUsers ? JSON.parse(storedUsers) : [];
@@ -47,8 +58,6 @@ const LoginScreen = () => {
     );
 
     if (matchedUser) {
-
-      // 🔥 FIX: Save FULL user object
       await AsyncStorage.setItem(
         "currentUser",
         JSON.stringify(matchedUser)
@@ -58,45 +67,60 @@ const LoginScreen = () => {
         index: 0,
         routes: [{ name: "Home" }],
       });
-
     } else {
-      Alert.alert("Error", "Invalid email or password");
+      setPasswordError("Invalid email or password");
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-
-      {/* ✅ BACK BUTTON */}
+      {/* BACK */}
       <TouchableOpacity
         style={styles.backBtn}
-        onPress={() => {
-          navigation.navigate("Onboarding");
-        }}
+        onPress={() => navigation.navigate("Onboarding")}
       >
         <Ionicons name="arrow-back" size={24} color="#000" />
       </TouchableOpacity>
 
       <Text style={styles.hello}>Hello there 👋</Text>
 
+      {/* EMAIL */}
       <Text style={styles.label}>Email</Text>
-      <View style={styles.inputRow}>
+      <View
+        style={[
+          styles.inputRow,
+          emailError ? styles.inputRowError : null,
+        ]}
+      >
         <TextInput
           style={styles.input}
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(t) => {
+            setEmail(t);
+            setEmailError("");
+          }}
           autoCapitalize="none"
           keyboardType="email-address"
         />
       </View>
+      {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
 
+      {/* PASSWORD */}
       <Text style={styles.label}>Password</Text>
-      <View style={styles.inputRow}>
+      <View
+        style={[
+          styles.inputRow,
+          passwordError ? styles.inputRowError : null,
+        ]}
+      >
         <TextInput
           style={styles.input}
           secureTextEntry={!showPassword}
           value={password}
-          onChangeText={setPassword}
+          onChangeText={(t) => {
+            setPassword(t);
+            setPasswordError("");
+          }}
         />
         <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
           <Ionicons
@@ -106,16 +130,24 @@ const LoginScreen = () => {
           />
         </TouchableOpacity>
       </View>
+      {passwordError ? (
+        <Text style={styles.error}>{passwordError}</Text>
+      ) : null}
 
+      {/* REMEMBER */}
       <View style={styles.rememberRow}>
         <Switch value={remember} onValueChange={setRemember} />
         <Text style={{ marginLeft: 8 }}>Remember me</Text>
       </View>
 
-      <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")}>
+      {/* FORGOT */}
+      <TouchableOpacity
+        onPress={() => navigation.navigate("ForgotPassword")}
+      >
         <Text style={styles.forgot}>Forgot Password?</Text>
       </TouchableOpacity>
 
+      {/* BUTTON */}
       <TouchableOpacity onPress={handleLogin}>
         <LinearGradient
           colors={["#7B5CFF", "#5E3DF0"]}
@@ -135,6 +167,7 @@ const styles = StyleSheet.create({
   backBtn: { marginBottom: 20 },
   hello: { fontSize: 22, fontWeight: "600", marginBottom: 40 },
   label: { marginTop: 15, color: "#333" },
+
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -142,14 +175,37 @@ const styles = StyleSheet.create({
     borderColor: "#6C4EFF",
     paddingVertical: 6,
   },
+
+  inputRowError: {
+    borderColor: "red",
+  },
+
   input: { flex: 1, fontSize: 14 },
-  rememberRow: { flexDirection: "row", alignItems: "center", marginTop: 20 },
-  forgot: { textAlign: "center", marginTop: 20, color: "#6C4EFF" },
+
+  error: {
+    color: "red",
+    fontSize: 12,
+    marginTop: 4,
+  },
+
+  rememberRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 20,
+  },
+
+  forgot: {
+    textAlign: "center",
+    marginTop: 20,
+    color: "#6C4EFF",
+  },
+
   button: {
     marginTop: 40,
     paddingVertical: 18,
     borderRadius: 25,
     alignItems: "center",
   },
+
   buttonText: { color: "#fff", fontWeight: "700" },
 });

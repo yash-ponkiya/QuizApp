@@ -124,7 +124,6 @@ export const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 28,
     alignItems: "center",
-    marginBottom: 40,
   },
 
   submitText: { color: "#fff", fontWeight: "700" },

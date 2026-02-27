@@ -14,11 +14,9 @@ const Tab = createBottomTabNavigator();
 
 export default function HomeScreen() {
 
-  // ✅ BLOCK TAB HISTORY BACK
   useFocusEffect(
     useCallback(() => {
       const onBackPress = () => {
-        // prevent switching to previous tab
         return true;
       };
 
@@ -53,7 +51,7 @@ export default function HomeScreen() {
         },
       })}
     >
-      <Tab.Screen name="Home" component={HomeTab} />
+      <Tab.Screen name="HomeTab" component={HomeTab} />
       <Tab.Screen name="Library" component={LibraryScreen} />
       <Tab.Screen name="Join" component={JoinScreen} />
       <Tab.Screen name="Create" component={CreateScreen} />

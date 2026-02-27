@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 type Props = {
   title?: string;
@@ -19,13 +20,19 @@ export default function HomeHeader({
   onSearchPress,
   onNotificationsPress,
 }: Props) {
+  const navigation: any = useNavigation();
+
+  const goHome = () => {
+    navigation.navigate("HomeTab");
+  };
+
   return (
     <View style={styles.header}>
-      {/* Logo + Title */}
-      <View style={styles.logoRow}>
+
+      <TouchableOpacity style={styles.logoRow} onPress={goHome}>
         <Ionicons name="help-circle" size={26} color="#6C4EFF" />
         <Text style={styles.logoText}>{title}</Text>
-      </View>
+      </TouchableOpacity>
 
       {/* Right Icons */}
       <View style={styles.headerIcons}>
