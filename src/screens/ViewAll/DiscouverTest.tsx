@@ -59,7 +59,8 @@ export default function DiscoverTest() {
   const renderCard = ({ item }: any) => (
     <TouchableOpacity
       style={styles.card}
-      onPress={() => navigation.navigate("TestScreen", { quiz: item })}
+      // ✅ CHANGE: Navigate to Detail screen instead of Test screen
+      onPress={() => navigation.navigate("QuizDetail", { quiz: item })}
     >
       <Image
         source={{
@@ -72,8 +73,8 @@ export default function DiscoverTest() {
 
       {/* Overlay */}
       <View style={styles.overlay}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
-        <Text style={styles.cardSubtitle}>{item.authorName}</Text>
+        <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
+        <Text style={styles.cardSubtitle} numberOfLines={1}>{item.authorName}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -108,47 +109,47 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 10,
   },
-
   card: {
     flex: 1,
     height: 130,
     borderRadius: 14,
     overflow: "hidden",
     marginBottom: 12,
+    // Add a slight elevation for a nicer look
+    backgroundColor: '#f8f8f8',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
   },
-
   image: {
     width: "100%",
     height: "100%",
   },
-
   overlay: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
     padding: 6,
-    backgroundColor: "rgba(0,0,0,0.35)",
+    backgroundColor: "rgba(0,0,0,0.35)", // Darkened slightly for better text contrast
   },
-
   cardTitle: {
     color: "#fff",
     fontWeight: "700",
     fontSize: 14,
   },
-
   cardSubtitle: {
-    color: "#eee",
+    color: "#ddd",
     fontSize: 11,
     marginTop: 2,
   },
-
   empty: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-
   emptyText: {
     color: "#999",
     fontSize: 14,

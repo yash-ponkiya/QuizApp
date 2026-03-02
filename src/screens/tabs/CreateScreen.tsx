@@ -30,6 +30,7 @@ export default function CreateScreen() {
   const [selectedCollection, setSelectedCollection] = useState<any>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [refreshing, setRefreshing] = useState(false); // ✅ IMAGE QUESTION FEATURE — ADD
+  
   // ✅ IMAGE QUESTION FEATURE — ADD
   const onRefresh = async () => {
     setRefreshing(true);
@@ -92,6 +93,13 @@ export default function CreateScreen() {
     }
   };
 
+  // ✅ IMAGE QUESTION FEATURE - DELETE IMAGE
+  const deleteQuestionImage = (qIndex: number) => {
+    const updated = [...questions];
+    updated[qIndex].image = null;
+    setQuestions(updated);
+  };
+
   const addQuestion = () => {
     setQuestions([
       ...questions,
@@ -129,10 +137,13 @@ export default function CreateScreen() {
     setQuestions(updated);
   };
 
-  // ✅ IMAGE QUESTION FEATURE
+  // ✅ IMAGE QUESTION FEATURE - MODIFIED TO CLEAR IMAGE ON TEXT MODE
   const setQuestionType = (qIndex: number, type: "text" | "image") => {
     const updated = [...questions];
     updated[qIndex].type = type;
+    if (type === "text") {
+      updated[qIndex].image = null; // Clear image when switching to text
+    }
     setQuestions(updated);
   };
 
@@ -164,7 +175,7 @@ export default function CreateScreen() {
     }
 
     questions.forEach((q, qi) => {
-      if (q.type === "text" && !q.question.trim()) {
+      if (!q.question.trim()) {
         newErrors[`q_${qi}`] = "Question required";
         valid = false;
       }
@@ -203,15 +214,15 @@ export default function CreateScreen() {
       questions,
       timeMode,
       timeLimit: timeMode === "limited" ? Number(timeLimit) : null,
-      authorUsername: currentUser.username,
-      authorEmail: currentUser.email,
-      createdBy: currentUser.email,
+      authorUsername: currentUser?.username || "Anonymous",
+      authorEmail: currentUser?.email || "No Email",
+      createdBy: currentUser?.email || "System",
     };
 
     quizzes.push(newQuiz);
     await AsyncStorage.setItem("quizzes", JSON.stringify(quizzes));
 
-    Alert.alert("Quiz created");
+    Alert.alert("Success", "Quiz created successfully!");
     resetQuiz();
   };
 
@@ -353,40 +364,57 @@ export default function CreateScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* ✅ IMAGE QUESTION FEATURE */}
-            <View style={{ flexDirection: "row", gap: 12, marginBottom: 6 }}>
+            {/* ✅ IMAGE QUESTION FEATURE: Selection of Type */}
+            <View style={{ flexDirection: "row", gap: 12, marginBottom: 10, marginTop: 5 }}>
               <TouchableOpacity onPress={() => setQuestionType(qi, "text")} style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                <Ionicons name={q.type === "image" ? "radio-button-off" : "radio-button-on"} size={18} color="#6C4EFF" />
-                <Text>Text</Text>
+                <Ionicons name={q.type === "text" ? "radio-button-on" : "radio-button-off"} size={18} color="#6C4EFF" />
+                <Text style={{ fontWeight: q.type === "text" ? "600" : "400" }}>Text Only</Text>
               </TouchableOpacity>
 
               <TouchableOpacity onPress={() => setQuestionType(qi, "image")} style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                 <Ionicons name={q.type === "image" ? "radio-button-on" : "radio-button-off"} size={18} color="#6C4EFF" />
-                <Text>Image + Text</Text>
+                <Text style={{ fontWeight: q.type === "image" ? "600" : "400" }}>Image + Text</Text>
               </TouchableOpacity>
             </View>
 
-            {/* ✅ IMAGE QUESTION FEATURE — ADDITION: text also in image mode */}
-            {q.type === "image" && (
-              <TextInput
-                placeholder={`Question ${qi + 1}`}
-                style={styles.qInput}
-                value={q.question}
-                onChangeText={(t) => updateQuestion(qi, t)}
-              />
-            )}
+            {/* ✅ Question Text Input */}
+            <TextInput
+              placeholder={`Enter Question ${qi + 1}`}
+              style={styles.qInput}
+              value={q.question}
+              onChangeText={(t) => updateQuestion(qi, t)}
+            />
 
+            {/* ✅ IMAGE QUESTION FEATURE — Image Picker with Edit/Delete */}
             {q.type === "image" && (
-              <TouchableOpacity style={styles.qImageBox} onPress={() => pickQuestionImage(qi)}>
+              <View>
                 {q.image ? (
-                  <Image source={{ uri: q.image }} style={styles.qImage} />
+                  <View style={styles.imagePreviewContainer}>
+                    <Image source={{ uri: q.image }} style={styles.qImage} />
+                    <View style={styles.imageActions}>
+                      <TouchableOpacity 
+                        style={[styles.actionBtn, {backgroundColor: '#6C4EFF'}]} 
+                        onPress={() => pickQuestionImage(qi)}
+                      >
+                        <Ionicons name="pencil" size={16} color="#fff" />
+                        <Text style={styles.actionBtnText}>Edit</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={[styles.actionBtn, {backgroundColor: '#F44336'}]} 
+                        onPress={() => deleteQuestionImage(qi)}
+                      >
+                        <Ionicons name="close" size={16} color="#fff" />
+                        <Text style={styles.actionBtnText}>Remove</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
                 ) : (
-                  <>
+                  <TouchableOpacity style={styles.qImageBox} onPress={() => pickQuestionImage(qi)}>
                     <Ionicons name="image-outline" size={28} color="#6C4EFF" />
-                    <Text style={{ color: "#6C4EFF" }}>Pick Question Image</Text>
-                  </>
+                    <Text style={{ color: "#6C4EFF", fontSize: 12 }}>Pick Question Image</Text>
+                  </TouchableOpacity>
                 )}
-              </TouchableOpacity>
+              </View>
             )}
 
             {errors[`q_${qi}`] && (
@@ -478,6 +506,10 @@ const styles = StyleSheet.create({
   error: { color: "#F44336", fontSize: 12, marginBottom: 6, marginTop: 2 },
 
   // IMAGE QUESTION
-  qImageBox: { height: 120, borderWidth: 1.5, borderColor: "#6C4EFF", borderRadius: 10, justifyContent: "center", alignItems: "center", marginBottom: 6, backgroundColor: "#F8F7FF" },
-  qImage: { width: "100%", height: "100%", borderRadius: 10 }
+  qImageBox: { height: 120, borderWidth: 1.5, borderColor: "#6C4EFF", borderRadius: 10, justifyContent: "center", alignItems: "center", marginBottom: 10, backgroundColor: "#F8F7FF", overflow: 'hidden' },
+  imagePreviewContainer: { position: 'relative', width: '100%', height: 150, borderRadius: 10, overflow: 'hidden', marginBottom: 10 },
+  qImage: { width: "100%", height: "100%", borderRadius: 10 },
+  imageActions: { position: 'absolute', bottom: 8, right: 8, flexDirection: 'row', gap: 8 },
+  actionBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 15, elevation: 3, shadowColor: '#000', shadowOffset: {width:0, height:2}, shadowOpacity: 0.2, shadowRadius: 2 },
+  actionBtnText: { color: '#fff', fontSize: 11, fontWeight: '700', marginLeft: 4 }
 });
