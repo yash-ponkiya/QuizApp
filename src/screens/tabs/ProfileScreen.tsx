@@ -295,15 +295,15 @@ export default function ProfileScreen() {
               ))
             )}
 
-            <TouchableOpacity onPress={handleLogout}>
+            
+          </>
+        )}
+      </ScrollView>
+        <TouchableOpacity onPress={handleLogout}>
               <LinearGradient colors={["#7B5CFF", "#5E3DF0"]} style={styles.button}>
                 <Text style={styles.buttonText}>Logout</Text>
               </LinearGradient>
             </TouchableOpacity>
-          </>
-        )}
-      </ScrollView>
-
       {/* YOUR MODAL — UNCHANGED */}
       <Modal transparent visible={modalVisible} animationType="fade">
         <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
@@ -417,7 +417,8 @@ const styles = StyleSheet.create({
   empty: { color: "#999", marginBottom: 10 },
 
   button: {
-    marginTop: 30,
+    marginTop: 10,
+    marginBottom: -10,
     paddingVertical: 18,
     borderRadius: 30,
     alignItems: "center",
